@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stormfall</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="back-home" href="../" aria-label="Back to DID Games arcade">← Arcade</a>
+    <main id="shell">
+      <canvas id="game" width="1280" height="720" aria-label="Stormfall game canvas"></canvas>
+      <section id="touchControls" class="touch-controls" aria-label="Touch controls">
+        <div class="touch-pad" aria-label="Move player one">
+          <span></span><button data-code="KeyW" type="button">▲</button><span></span>
+          <button data-code="KeyA" type="button">◀</button><span></span><button data-code="KeyD" type="button">▶</button>
+          <span></span><button data-code="KeyS" type="button">▼</button><span></span>
+        </div>
+        <div class="touch-actions">
+          <button data-code="KeyE" type="button">Gather</button>
+          <button data-code="KeyF" type="button">Attack</button>
+          <button data-code="KeyC" type="button">Craft</button>
+        </div>
+      </section>
+      <section id="menu" class="overlay">
+        <div class="panel">
+          <p class="kicker">Stormfall</p>
+          <h1>Scrapyard Forest</h1>
+          <p>
+            A co-op survival prototype after a massive tornado. Gather scrap,
+            craft weapons, hold camp, revive allies, destroy the Robot Cat,
+            and push into the Burning Plains.
+          </p>
+          <div class="actions">
+            <button id="startGame" type="button">Start Mission</button>
+            <button id="toggleHelp" type="button">Controls</button>
+          </div>
+          <div id="help" class="help">
+            <strong>Player 1:</strong> WASD move, E gather/build/revive, F attack, C craft<br />
+            <strong>Player 2:</strong> Arrow keys move, / gather/build/revive, . attack, , craft<br />
+            <strong>Objective:</strong> gather wood/scrap/med herbs, build camp, craft storm spears,
+            clear spirits, fight Robot Cat, then return to camp to travel onward.
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

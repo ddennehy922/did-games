@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wardrobe Winter: 2D Adventure Prototype</title>
+  <style>
+    /* Page shell: centers the game and gives it a storybook arcade feel. */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #171d2b;
+      color: #f7fbff;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+    }
+
+    .game-shell {
+      width: min(1100px, 96vw);
+      display: grid;
+      grid-template-columns: minmax(0, 760px) 300px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .game-frame {
+      position: relative;
+      border: 4px solid #f2e6c8;
+      background: #101722;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      image-rendering: pixelated;
+    }
+
+    .dialogue {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      min-height: 92px;
+      padding: 14px 16px;
+      border: 3px solid #4a2f1c;
+      background: rgba(255, 250, 225, 0.95);
+      color: #2b2118;
+      font-size: 17px;
+      line-height: 1.35;
+      display: none;
+    }
+
+    .dialogue.visible {
+      display: block;
+    }
+
+    .dialogue strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #5c201d;
+    }
+
+    .panel {
+      border: 3px solid #f2e6c8;
+      background: #212a3d;
+      padding: 14px;
+      min-height: 570px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .status {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0 16px;
+      font-size: 15px;
+    }
+
+    .badge {
+      padding: 8px 10px;
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .quests {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      font-size: 15px;
+    }
+
+    .quests li {
+      padding: 8px 10px;
+      border-left: 5px solid #718399;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .quests li.done {
+      border-left-color: #72c77d;
+      color: #c9ffd0;
+      text-decoration: line-through;
+    }
+
+    .quests li.active {
+      border-left-color: #ffd166;
+      background: rgba(255, 209, 102, 0.16);
+    }
+
+    .controls {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 2px solid rgba(255, 255, 255, 0.18);
+      color: #dbe9f9;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 9px 12px;
+      border: 2px solid #f2e6c8;
+      background: #7a2e35;
+      color: #fff7e2;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #9c3a42;
+    }
+
+    .back-home {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 20;
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: #07120a;
+      background: #1ed760;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      font-size: 14px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .back-home:hover,
+    .back-home:focus-visible {
+      background: #5af08d;
+    }
+
+    .touch-controls {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      z-index: 30;
+      width: min(760px, calc(100vw - 24px));
+      display: none;
+      grid-template-columns: 132px 1fr 116px;
+      gap: 14px;
+      align-items: end;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .touch-pad,
+    .touch-actions {
+      display: grid;
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    .touch-pad {
+      grid-template-columns: repeat(3, 40px);
+      grid-template-rows: repeat(3, 40px);
+    }
+
+    .touch-btn {
+      margin: 0;
+      width: 100%;
+      min-height: 40px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-radius: 14px;
+      background: rgba(18, 27, 40, 0.82);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(8px);
+      touch-action: none;
+      user-select: none;
+    }
+
+    .touch-btn.primary {
+      min-height: 88px;
+      border-radius: 999px;
+      background: #1ed760;
+      color: #07120a;
+      font-size: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .game-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 780px), (pointer: coarse) {
+      body { padding-bottom: 118px; }
+      .touch-controls { display: grid; }
+    }
+  </style>
+</head>
+<body>
+  <a class="back-home" href="../" aria-label="Back to DID Games arcade">← Arcade</a>
+  <main class="game-shell">
+    <section class="game-frame" aria-label="Playable game">
+      <canvas id="game" width="760" height="570"></canvas>
+      <div id="dialogue" class="dialogue" role="status" aria-live="polite"></div>
+    </section>
+
+    <aside class="panel">
+      <h1>Wardrobe Winter</h1>
+      <div class="status">
+        <div id="worldStatus" class="badge">World: Mansion</div>
+        <div id="hintStatus" class="badge">Move to the wardrobe and press Space.</div>
+      </div>
+      <ul id="questList" class="quests"></ul>
+      <div class="controls">
+        <strong>Controls</strong><br />
+        Move: WASD or Arrow Keys<br />
+        Talk / Interact: Space or Enter<br />
+        Goal: Follow the golden quest marker.
+      </div>
+      <button id="restart">Restart Adventure</button>
+    </aside>
+  </main>
+
+  <section class="touch-controls" aria-label="Touch game controls">
+    <div class="touch-pad" aria-label="Move">
+      <span></span><button class="touch-btn" data-key="w" type="button">▲</button><span></span>
+      <button class="touch-btn" data-key="a" type="button">◀</button><span></span><button class="touch-btn" data-key="d" type="button">▶</button>
+      <span></span><button class="touch-btn" data-key="s" type="button">▼</button><span></span>
+    </div>
+    <span></span>
+    <div class="touch-actions">
+      <button class="touch-btn primary" data-interact="true" type="button">Talk / Use</button>
+    </div>
+  </section>
+
+  <script>
+    /*
+      Wardrobe Winter
+      A small top-down 2D prototype with original placeholder names and art.
+      The code is intentionally simple and sectioned so the game can grow later.
+    */
+
+    /* Canvas and UI references. */
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const dialogueBox = document.getElementById("dialogue");
+    const questList = document.getElementById("questList");
+    const worldStatus = document.getElementById("worldStatus");
+    const hintStatus = document.getElementById("hintStatus");
+    const restartButton = document.getElementById("restart");
+
+    /* Core map constants. */
+    const TILE = 38;
+    const VIEW_WIDTH = canvas.width;
+    const VIEW_HEIGHT = canvas.height;
+    const WORLD_WIDTH = 1900;
+    const WORLD_HEIGHT = 1400;
+
+    /* Keyboard state for smooth movement and interactions. */
+    const keys = new Set();
+    let interactPressed = false;
+
+    /* Story quest definitions. */
+    const quests = [
+      "Enter the wardrobe",
+      "Find the lantern",
+      "Talk to the faun guide",
+      "Find Eamon",
+      "Reach the Stone Table",
+      "Free the stone statues",
+      "Survive the Frost Queen's ice",
+      "Defeat the Frost Queen",
+      "Change winter into spring"
+    ];
+
+    /* Game state that can be reset without reloading the page. */
+    const state = {
+      scene: "mansion",
+      quest: 0,
+      season: "winter",
+      candyTaken: false,
+      faunHelped: false,
+      guardianReturned: false,
+      thawedStatues: [],
+      frostLevel: 0,
+      frostChallengeActive: false,
+      frostChallengeTimer: 0,
+      messageTimer: 0,
+      currentMessage: null,
+      camera: { x: 0, y: 0 },
+      walkTime: 0,
+      isMoving: false,
+      player: { x: 350, y: 395, w: 22, h: 26, speed: 3.2, color: "#8f4cc7", safeX: 350, safeY: 395 }
+    };
+
+    /*
+      World objects are grouped by scene.
+      Each object has a rectangle for collision or interaction and a type for drawing.
+    */
+    const mansionObjects = [
+      { id: "wardrobe", type: "wardrobe", name: "Old Wardrobe", x: 318, y: 145, w: 98, h: 130, solid: false }
+    ];
+
+    const winterObjects = [
+      { id: "portal", type: "wardrobeBack", name: "Wardrobe Door", x: 710, y: 1050, w: 58, h: 48, solid: false },
+      { id: "lantern", type: "lantern", name: "Glowing Lantern", x: 690, y: 870, w: 32, h: 58, solid: false },
+      { id: "stoneTable", type: "stoneTable", name: "Stone Table", x: 682, y: 150, w: 136, h: 54, solid: false },
+      { id: "castle", type: "castle", name: "Ice Castle", x: 1200, y: 120, w: 150, h: 160, solid: false },
+      { id: "statue1", type: "statue", name: "Stone Child", x: 1120, y: 455, w: 26, h: 36, solid: false },
+      { id: "statue2", type: "statue", name: "Stone Creature", x: 1312, y: 468, w: 26, h: 36, solid: false },
+      { id: "queenBeacon", type: "queenBeacon", name: "Frost Queen Beacon", x: 1240, y: 300, w: 130, h: 130, solid: false }
+    ];
+
+    /* Moving hazards for the Frost Queen's second stage. They only chill and reset the trial. */
+    const iceCrystals = [
+      { x: 1060, y: 560, w: 20, h: 20, vx: 2.2, minX: 1040, maxX: 1375 },
+      { x: 1340, y: 620, w: 20, h: 20, vx: -2.4, minX: 1040, maxX: 1375 },
+      { x: 1080, y: 680, w: 20, h: 20, vx: 2.0, minX: 1040, maxX: 1375 },
+      { x: 1260, y: 740, w: 20, h: 20, vx: -1.9, minX: 1040, maxX: 1375 }
+    ];
+
+    const springObjects = winterObjects.filter((object) => object.id !== "statue1" && object.id !== "statue2");
+
+    /* Snowbank walls form a simple maze route through the winter forest. */
+    const mazeWalls = [
+      { id: "mazeWall0", type: "mazeWall", x: 170, y: 980, w: 420, h: 34, solid: true },
+      { id: "mazeWall1", type: "mazeWall", x: 850, y: 980, w: 430, h: 34, solid: true },
+      { id: "mazeWall2", type: "mazeWall", x: 160, y: 820, w: 34, h: 330, solid: true },
+      { id: "mazeWall3", type: "mazeWall", x: 330, y: 840, w: 360, h: 34, solid: true },
+      { id: "mazeWall4", type: "mazeWall", x: 820, y: 820, w: 34, h: 210, solid: true },
+      { id: "mazeWall5", type: "mazeWall", x: 1000, y: 760, w: 360, h: 34, solid: true },
+      { id: "mazeWall6", type: "mazeWall", x: 500, y: 680, w: 34, h: 210, solid: true },
+      { id: "mazeWall7", type: "mazeWall", x: 650, y: 650, w: 310, h: 34, solid: true },
+      { id: "mazeWall8", type: "mazeWall", x: 260, y: 565, w: 360, h: 34, solid: true },
+      { id: "mazeWall9", type: "mazeWall", x: 260, y: 360, w: 34, h: 240, solid: true },
+      { id: "mazeWall10", type: "mazeWall", x: 420, y: 400, w: 360, h: 34, solid: true },
+      { id: "mazeWall11", type: "mazeWall", x: 880, y: 360, w: 34, h: 270, solid: true },
+      { id: "mazeWall12", type: "mazeWall", x: 1040, y: 520, w: 360, h: 34, solid: true },
+      { id: "mazeWall13", type: "mazeWall", x: 1040, y: 340, w: 34, h: 214, solid: true },
+      { id: "mazeWall14", type: "mazeWall", x: 1140, y: 315, w: 280, h: 34, solid: true },
+      { id: "mazeWall15", type: "mazeWall", x: 615, y: 250, w: 34, h: 250, solid: true },
+      { id: "mazeWall16", type: "mazeWall", x: 760, y: 250, w: 260, h: 34, solid: true },
+      { id: "mazeWall17", type: "mazeWall", x: 420, y: 95, w: 210, h: 34, solid: true },
+      { id: "mazeWall18", type: "mazeWall", x: 845, y: 90, w: 340, h: 34, solid: true },
+      { id: "mazeWall19", type: "mazeWall", x: 1460, y: 650, w: 34, h: 220, solid: true },
+      { id: "mazeWall20", type: "mazeWall", x: 1030, y: 880, w: 34, h: 170, solid: true },
+      { id: "mazeWall21", type: "mazeWall", x: 1500, y: 980, w: 34, h: 320, solid: true },
+      { id: "mazeWall22", type: "mazeWall", x: 1180, y: 1210, w: 520, h: 34, solid: true },
+      { id: "mazeWall23", type: "mazeWall", x: 260, y: 1215, w: 640, h: 34, solid: true },
+      { id: "mazeWall24", type: "mazeWall", x: 1600, y: 265, w: 34, h: 440, solid: true },
+      { id: "mazeWall25", type: "mazeWall", x: 1320, y: 170, w: 360, h: 34, solid: true },
+      { id: "mazeWall26", type: "mazeWall", x: 80, y: 190, w: 34, h: 720, solid: true },
+      { id: "mazeWall27", type: "mazeWall", x: 120, y: 1250, w: 34, h: 120, solid: true }
+    ];
+
+    /* Tree placement creates a forest while leaving maze paths for the player. */
+    const trees = [
+      [95, 900], [260, 1030], [430, 930], [620, 1020], [945, 925], [1325, 980],
+      [220, 710], [420, 760], [720, 760], [930, 700], [1160, 850], [1400, 825],
+      [110, 510], [370, 500], [565, 505], [745, 520], [970, 460], [1375, 460],
+      [130, 285], [350, 280], [545, 310], [820, 315], [1125, 265], [1420, 260],
+      [170, 105], [705, 90], [980, 160], [1360, 120], [1590, 1030], [1720, 1120],
+      [1780, 720], [1650, 520], [1740, 330], [320, 1310], [760, 1300], [1040, 1260]
+    ].map(([x, y], index) => ({ id: `tree${index}`, type: "tree", x, y, w: 38, h: 54, solid: false }));
+
+    /* Extra scenery makes the larger map feel more like a handmade block world. */
+    const scenery = [
+      { id: "pond0", type: "pond", x: 1540, y: 1040, w: 210, h: 120, solid: false },
+      { id: "pond1", type: "pond", x: 130, y: 1010, w: 150, h: 90, solid: false },
+      { id: "camp0", type: "campfire", x: 430, y: 735, w: 36, h: 36, solid: false },
+      { id: "candy0", type: "candy", x: 1068, y: 680, w: 30, h: 30, solid: false },
+      { id: "sign0", type: "sign", x: 675, y: 955, w: 38, h: 34, solid: false },
+      { id: "sign1", type: "sign", x: 1010, y: 500, w: 38, h: 34, solid: false },
+      { id: "rock0", type: "rock", x: 520, y: 1035, w: 42, h: 32, solid: false },
+      { id: "rock1", type: "rock", x: 785, y: 725, w: 42, h: 32, solid: false },
+      { id: "rock2", type: "rock", x: 1185, y: 610, w: 42, h: 32, solid: false },
+      { id: "rock3", type: "rock", x: 930, y: 210, w: 42, h: 32, solid: false },
+      { id: "flower0", type: "flowerPatch", x: 640, y: 300, w: 70, h: 46, solid: false },
+      { id: "flower1", type: "flowerPatch", x: 900, y: 1040, w: 70, h: 46, solid: false }
+    ];
+
+    /* NPC definitions. Display names are original substitutes for protected source names. */
+    const npcs = [
+      {
+        id: "luma",
+        name: "Luma",
+        role: "Kind Child",
+        x: 350,
+        y: 430,
+        w: 25,
+        h: 29,
+        color: "#d76fb3",
+        scene: "mansion",
+        dialogue: "I found the wardrobe in the big wooden mansion. It feels ordinary, but the air inside is cold."
+      },
+      {
+        id: "faun",
+        name: "Pip the Faun Guide",
+        role: "Regretful Helper",
+        x: 300,
+        y: 720,
+        w: 25,
+        h: 31,
+        color: "#b17b43",
+        scene: "winter",
+        dialogue: "I once served the Frost Queen and led children toward danger. I am sorry. Let me help you undo the winter."
+      },
+      {
+        id: "eamon",
+        name: "Eamon",
+        role: "Tempted Brother",
+        x: 1030,
+        y: 705,
+        w: 25,
+        h: 29,
+        color: "#447ad6",
+        scene: "winter",
+        dialogue: "She offered enchanted sweets and a crown. I wanted to be important, but it was a cold promise."
+      },
+      {
+        id: "dawnmane",
+        name: "Dawnmane",
+        role: "Lion-like Guardian",
+        x: 730,
+        y: 245,
+        w: 40,
+        h: 34,
+        color: "#d89a35",
+        scene: "winter",
+        dialogue: "Love is stronger than the oldest winter. At the Stone Table, I will give myself so the children may be free."
+      },
+      {
+        id: "frostQueen",
+        name: "Frost Queen",
+        role: "Winter Ruler",
+        x: 1225,
+        y: 315,
+        w: 118,
+        h: 150,
+        color: "#60d8ff",
+        scene: "winter",
+        dialogue: "This land is mine: silent, frozen, and obedient. Children who oppose me become stone."
+      },
+      {
+        id: "sora",
+        name: "Sora",
+        role: "Brave Sister",
+        x: 455,
+        y: 930,
+        w: 24,
+        h: 29,
+        color: "#4ec0b0",
+        scene: "winter",
+        dialogue: "I marked a safer path through the snowbanks. Keep moving, and do not let the Frost Queen scare you."
+      },
+      {
+        id: "peregrin",
+        name: "Peregrin",
+        role: "Brave Brother",
+        x: 565,
+        y: 485,
+        w: 24,
+        h: 29,
+        color: "#c4524b",
+        scene: "winter",
+        dialogue: "The maze bends back on itself near the Stone Table. Look for open snow, not just the closest path."
+      },
+      {
+        id: "soraSpring",
+        name: "Sora",
+        role: "Future Queen",
+        x: 620,
+        y: 230,
+        w: 24,
+        h: 29,
+        color: "#4ec0b0",
+        scene: "spring",
+        dialogue: "The thaw has begun. We will rule with courage, kindness, and clear hearts."
+      },
+      {
+        id: "peregrinSpring",
+        name: "Peregrin",
+        role: "Future King",
+        x: 855,
+        y: 230,
+        w: 24,
+        h: 29,
+        color: "#c4524b",
+        scene: "spring",
+        dialogue: "The castle bells are ringing. Winter has ended, and our work is to care for everyone."
+      },
+      {
+        id: "merrybark",
+        name: "Merrybark",
+        role: "Talking Creature",
+        x: 965,
+        y: 915,
+        w: 28,
+        h: 25,
+        color: "#8b5a34",
+        scene: "winter",
+        dialogue: "The Frost Queen made the maze twisty, but every wall has an end if you follow it calmly."
+      }
+    ];
+
+    /* Utility helpers for rectangle math and distance checks. */
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function distance(a, b) {
+      const ax = a.x + a.w / 2;
+      const ay = a.y + a.h / 2;
+      const bx = b.x + b.w / 2;
+      const by = b.y + b.h / 2;
+      return Math.hypot(ax - bx, ay - by);
+    }
+
+    function getSceneObjects() {
+      if (state.scene === "mansion") return mansionObjects;
+      const seasonalObjects = state.season === "spring" ? springObjects : winterObjects;
+      const walls = state.season === "spring" ? [] : mazeWalls;
+      return [...seasonalObjects, ...walls, ...scenery, ...trees];
+    }
+
+    function getVisibleNpcs() {
+      if (state.season === "spring" && state.scene !== "mansion") {
+        return npcs.filter((npc) => npc.scene === "spring" || ["faun", "eamon", "dawnmane", "merrybark"].includes(npc.id));
+      }
+      return npcs.filter((npc) => npc.scene === state.scene || (state.season === "spring" && npc.scene === "spring"));
+    }
+
+    function objectById(id) {
+      return [...mansionObjects, ...winterObjects, ...mazeWalls, ...scenery, ...trees].find((object) => object.id === id);
+    }
+
+    function worldBounds() {
+      return state.scene === "mansion"
+        ? { width: VIEW_WIDTH, height: VIEW_HEIGHT }
+        : { width: WORLD_WIDTH, height: WORLD_HEIGHT };
+    }
+
+    function updateCamera() {
+      const bounds = worldBounds();
+      state.camera.x = Math.max(0, Math.min(state.player.x - VIEW_WIDTH / 2, bounds.width - VIEW_WIDTH));
+      state.camera.y = Math.max(0, Math.min(state.player.y - VIEW_HEIGHT / 2, bounds.height - VIEW_HEIGHT));
+    }
+
+    /* Dialogue and quest helpers. */
+    function showMessage(name, text, duration = 280) {
+      state.currentMessage = { name, text };
+      state.messageTimer = duration;
+      dialogueBox.innerHTML = `<strong>${name}</strong>${text}`;
+      dialogueBox.classList.add("visible");
+    }
+
+    function hideMessage() {
+      dialogueBox.classList.remove("visible");
+      state.currentMessage = null;
+      state.messageTimer = 0;
+    }
+
+    function completeQuest(index, message) {
+      if (state.quest === index) {
+        state.quest += 1;
+        showMessage("Quest Complete", message, 220);
+        renderQuestList();
+      }
+    }
+
+    function renderQuestList() {
+      questList.innerHTML = "";
+      quests.forEach((quest, index) => {
+        const item = document.createElement("li");
+        item.textContent = quest;
+        if (index < state.quest) item.classList.add("done");
+        if (index === state.quest) item.classList.add("active");
+        questList.appendChild(item);
+      });
+      worldStatus.textContent = `World: ${state.scene === "mansion" ? "Mansion" : state.season === "spring" ? "Spring Realm" : "Winter Realm"}`;
+      hintStatus.textContent = `${getHint()} ${getFrostStatus()}`;
+    }
+
+    function getHint() {
+      if (state.quest >= quests.length) return "Adventure complete. Spring has returned.";
+      const hints = [
+        "Step into the wardrobe and press Space.",
+        "Follow the glow to the lantern.",
+        "Speak with the faun guide near the western trees.",
+        "Find Eamon near the ice castle.",
+        "Go to the Stone Table in the north.",
+        "Use warm lantern light on both stone statues.",
+        "Step near the Frost Queen and endure her ice trial.",
+        "Face the Frost Queen with Dawnmane's courage.",
+        "Return to the Stone Table to welcome spring."
+      ];
+      return hints[Math.min(state.quest, hints.length - 1)] || "Adventure complete.";
+    }
+
+    function getFrostStatus() {
+      if (state.quest < 5) return "Frost Queen: waiting in the ice castle";
+      if (state.quest === 5) return `Frost Queen Level 1: statues freed ${state.thawedStatues.length}/2`;
+      if (state.quest === 6) {
+        const seconds = Math.ceil(state.frostChallengeTimer / 60);
+        return state.frostChallengeActive ? `Frost Queen Level 2: survive ${seconds}s` : "Frost Queen Level 2: press Space near her";
+      }
+      if (state.quest === 7) return "Frost Queen Level 3: final thaw";
+      return "Frost Queen: spell broken";
+    }
+
+    function startFrostChallenge() {
+      state.frostLevel = 2;
+      state.frostChallengeActive = true;
+      state.frostChallengeTimer = 420;
+      state.player.x = 1100;
+      state.player.y = 700;
+      state.player.safeX = state.player.x;
+      state.player.safeY = state.player.y;
+      updateCamera();
+      showMessage("Frost Queen", "Then cross my glittering storm. The crystals only chill you, but courage must keep moving.", 240);
+      renderQuestList();
+    }
+
+    /* Interaction logic advances the story in a kid-friendly way. */
+    function interact() {
+      const playerRect = state.player;
+      const nearbyNpc = getVisibleNpcs().find((npc) => distance(playerRect, npc) < 62);
+      const nearbyObject = getSceneObjects().find((object) => !object.solid && distance(playerRect, object) < 68);
+
+      if (nearbyNpc) {
+        showMessage(`${nearbyNpc.name} - ${nearbyNpc.role}`, nearbyNpc.dialogue);
+        if (nearbyNpc.id === "faun") {
+          state.faunHelped = true;
+          completeQuest(2, "Pip confessed, chose kindness, and became your guide.");
+        }
+        if (nearbyNpc.id === "eamon") {
+          state.candyTaken = true;
+          completeQuest(3, "Eamon admitted the enchanted candy was a trap.");
+        }
+        if (nearbyNpc.id === "dawnmane" && state.quest >= 4) {
+          state.guardianReturned = true;
+          showMessage("Dawnmane", "The Stone Table cracked, and Dawnmane returned with warm light in his mane.", 260);
+        }
+        if (nearbyNpc.id === "frostQueen" && state.quest === 6 && state.guardianReturned && !state.frostChallengeActive) {
+          startFrostChallenge();
+        } else if (nearbyNpc.id === "frostQueen" && state.quest === 7 && state.guardianReturned) {
+          state.frostLevel = 3;
+          completeQuest(7, "With brave words and warm magic, the Frost Queen's spell broke. No battle wounds, only thawing ice.");
+        } else if (nearbyNpc.id === "frostQueen" && state.frostChallengeActive) {
+          showMessage("Frost Queen", "Keep moving through the sparkling ice. Courage is warmer than fear.", 160);
+        } else if (nearbyNpc.id === "frostQueen" && state.quest >= 6) {
+          showMessage("Frost Queen", "You cannot end my winter until the guardian's sacrifice becomes new life.", 220);
+        }
+        return;
+      }
+
+      if (nearbyObject) {
+        if (nearbyObject.id === "wardrobe") {
+          state.scene = "winter";
+          state.player.x = 730;
+          state.player.y = 1030;
+          state.player.safeX = state.player.x;
+          state.player.safeY = state.player.y;
+          updateCamera();
+          completeQuest(0, "The wardrobe opened into falling snow and pine-scented air.");
+          renderQuestList();
+          return;
+        }
+
+        if (nearbyObject.id === "lantern") {
+          completeQuest(1, "The lantern's golden light showed the path deeper into the forest.");
+          return;
+        }
+
+        if (nearbyObject.id === "stoneTable" && state.quest === 4) {
+          state.guardianReturned = true;
+          completeQuest(4, "Dawnmane gave himself at the Stone Table, then rose again as the stone split.");
+          return;
+        }
+
+        if (nearbyObject.type === "statue" && state.quest === 5) {
+          if (!state.thawedStatues.includes(nearbyObject.id)) {
+            state.thawedStatues.push(nearbyObject.id);
+            showMessage("Warm Light", `${nearbyObject.name} blinked and stretched as the stone spell softened.`, 180);
+            if (state.thawedStatues.length >= 2) {
+              state.frostLevel = 1;
+              completeQuest(5, "Both statues woke safely. The Frost Queen's first spell cracked.");
+            }
+            renderQuestList();
+          } else {
+            showMessage(nearbyObject.name, "This friend is already free and cheering you on.", 140);
+          }
+          return;
+        }
+
+        if (nearbyObject.id === "stoneTable" && state.quest === 8) {
+          state.season = "spring";
+          completeQuest(8, "Winter melted into spring. Luma, Sora, Peregrin, and Eamon were crowned as gentle rulers.");
+          renderQuestList();
+          showMessage("Spring Returns", "Snowdrops bloomed, rivers sang, and every stone statue woke smiling.", 320);
+          return;
+        }
+
+        if (nearbyObject.id === "portal") {
+          showMessage("Wardrobe Door", "The way home is still here, but the realm needs you first.");
+          return;
+        }
+      }
+
+      showMessage("The Wind", "Nothing answers here. Try standing closer to a person or landmark.", 120);
+    }
+
+    /* Collision checks keep the player inside the map and out of solid scenery. */
+    function collisionRect(x = state.player.x, y = state.player.y) {
+      return { x: x + 4, y: y + 5, w: state.player.w - 8, h: state.player.h - 7 };
+    }
+
+    function isBlockedAt(nextX, nextY) {
+      const bounds = worldBounds();
+      const nextRect = collisionRect(nextX, nextY);
+      if (nextRect.x < 0 || nextRect.y < 0 || nextRect.x + nextRect.w > bounds.width || nextRect.y + nextRect.h > bounds.height) {
+        return true;
+      }
+      return getSceneObjects().some((object) => object.solid && rectsOverlap(nextRect, object));
+    }
+
+    function canMoveTo(nextX, nextY) {
+      return !isBlockedAt(nextX, nextY);
+    }
+
+    function rememberSafeSpot() {
+      if (!isBlockedAt(state.player.x, state.player.y)) {
+        state.player.safeX = state.player.x;
+        state.player.safeY = state.player.y;
+      }
+    }
+
+    function rescueIfStuck() {
+      if (!isBlockedAt(state.player.x, state.player.y)) return;
+      const rescuePoints = [
+        [state.player.safeX, state.player.safeY],
+        [730, 1030],
+        [690, 930],
+        [300, 720],
+        [1030, 705],
+        [730, 245]
+      ];
+      const safePoint = rescuePoints.find(([x, y]) => !isBlockedAt(x, y));
+      if (safePoint) {
+        state.player.x = safePoint[0];
+        state.player.y = safePoint[1];
+        showMessage("Snowbank Slip", "You were nudged back to open snow so you do not have to restart.", 130);
+      }
+    }
+
+    function updatePlayer() {
+      let dx = 0;
+      let dy = 0;
+      if (keys.has("arrowleft") || keys.has("a")) dx -= 1;
+      if (keys.has("arrowright") || keys.has("d")) dx += 1;
+      if (keys.has("arrowup") || keys.has("w")) dy -= 1;
+      if (keys.has("arrowdown") || keys.has("s")) dy += 1;
+      state.isMoving = dx !== 0 || dy !== 0;
+
+      if (dx !== 0 || dy !== 0) {
+        const length = Math.hypot(dx, dy);
+        dx = (dx / length) * state.player.speed;
+        dy = (dy / length) * state.player.speed;
+
+        const nextX = state.player.x + dx;
+        const nextY = state.player.y + dy;
+        if (canMoveTo(nextX, state.player.y)) state.player.x = nextX;
+        if (canMoveTo(state.player.x, nextY)) state.player.y = nextY;
+        rememberSafeSpot();
+        state.walkTime += 0.22;
+      }
+
+      rescueIfStuck();
+      updateCamera();
+
+      if (interactPressed) {
+        interact();
+        interactPressed = false;
+      }
+
+      if (state.messageTimer > 0) {
+        state.messageTimer -= 1;
+        if (state.messageTimer === 0) hideMessage();
+      }
+    }
+
+    function updateFrostChallenge() {
+      if (!state.frostChallengeActive) return;
+
+      iceCrystals.forEach((crystal) => {
+        crystal.x += crystal.vx;
+        if (crystal.x < crystal.minX || crystal.x > crystal.maxX) {
+          crystal.vx *= -1;
+        }
+        if (rectsOverlap(state.player, crystal)) {
+          state.frostChallengeTimer = 420;
+          state.player.x = 1100;
+          state.player.y = 700;
+          state.player.safeX = state.player.x;
+          state.player.safeY = state.player.y;
+          updateCamera();
+          showMessage("A Gentle Chill", "The crystal sparkle touched you. Shake off the frost and try the ice trial again.", 180);
+        }
+      });
+
+      state.frostChallengeTimer -= 1;
+      if (state.frostChallengeTimer <= 0) {
+        state.frostChallengeActive = false;
+        state.frostLevel = 2;
+        completeQuest(6, "You stayed brave through the crystal storm. The Frost Queen's second spell faded.");
+      }
+      renderQuestList();
+    }
+
+    /* Drawing helpers make placeholder pixel-style art from simple shapes. */
+    function drawPixelRect(x, y, w, h, color, outline = "#1d2633") {
+      ctx.fillStyle = outline;
+      ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawMansion() {
+      ctx.fillStyle = "#6b4933";
+      ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+      ctx.fillStyle = "#8a6348";
+      for (let x = 0; x < VIEW_WIDTH; x += 54) {
+        ctx.fillRect(x, 0, 4, VIEW_HEIGHT);
+      }
+      ctx.fillStyle = "#4b2f21";
+      ctx.fillRect(80, 70, 600, 420);
+      ctx.fillStyle = "#a37956";
+      ctx.fillRect(104, 96, 552, 368);
+      ctx.fillStyle = "#d7b681";
+      ctx.fillRect(130, 360, 500, 32);
+      drawObject(mansionObjects[0]);
+      ctx.fillStyle = "#f8edc8";
+      ctx.font = "18px Trebuchet MS";
+      ctx.fillText("Large Wooden Mansion", 270, 54);
+    }
+
+    function isoPoint(x, y, z = 0) {
+      const relX = x - state.camera.x;
+      const relY = y - state.camera.y;
+      return {
+        x: relX,
+        y: relY - z * 0.68
+      };
+    }
+
+    function drawIsoPoly(points, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(20, 31, 43, 0.42)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    function drawIsoCuboidAt(x, y, w, d, z, h, color) {
+      const depth = Math.max(4, Math.min(18, d * 0.28));
+      const sx = x - state.camera.x;
+      const sy = y - state.camera.y - z * 0.68;
+      ctx.fillStyle = "#121722";
+      ctx.fillRect(sx - 2, sy - h - 2, w + 4, h + depth + 4);
+      ctx.fillStyle = shadeColor(color, -34);
+      ctx.fillRect(sx, sy, w, depth);
+      ctx.fillStyle = shadeColor(color, -18);
+      ctx.fillRect(sx, sy - h, w, h);
+      ctx.fillStyle = shadeColor(color, 30);
+      ctx.fillRect(sx, sy - h, w, Math.max(5, depth));
+      ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+      ctx.fillRect(sx + 3, sy - h + 3, Math.max(4, w - 8), 3);
+    }
+
+    function drawIsoCuboid(x, y, w, d, h, color) {
+      drawIsoCuboidAt(x, y, w, d, 0, h, color);
+    }
+
+    function drawIsoGround() {
+      const spring = state.season === "spring";
+      ctx.fillStyle = spring ? "#74b96c" : "#dceefa";
+      ctx.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+      for (let y = Math.floor(state.camera.y / 60) * 60; y < state.camera.y + VIEW_HEIGHT + 80; y += 60) {
+        for (let x = Math.floor(state.camera.x / 60) * 60; x < state.camera.x + VIEW_WIDTH + 80; x += 60) {
+          const point = isoPoint(x, y);
+          ctx.fillStyle = spring ? "#79c173" : "#e8f6ff";
+          ctx.fillRect(point.x, point.y, 58, 58);
+          ctx.fillStyle = spring ? "rgba(39, 105, 45, 0.12)" : "rgba(70, 130, 160, 0.13)";
+          ctx.fillRect(point.x + 5, point.y + 8, 18, 4);
+        }
+      }
+
+      ctx.strokeStyle = spring ? "rgba(45, 98, 51, 0.26)" : "rgba(61, 126, 161, 0.22)";
+      ctx.setLineDash([7, 9]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      [
+        [735, 1082], [735, 930], [705, 930], [705, 790], [350, 790],
+        [350, 660], [720, 660], [720, 520], [980, 520], [980, 700],
+        [1285, 700], [1285, 470], [1190, 470], [1190, 365], [750, 365], [750, 210]
+      ].forEach(([x, y], index) => {
+        const point = isoPoint(x, y, 2);
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawIsoObject(object) {
+      switch (object.type) {
+        case "wardrobeBack":
+          drawIsoCuboid(object.x, object.y, 58, 28, 80, "#6a351e");
+          drawIsoCuboid(object.x + 18, object.y + 4, 22, 12, 44, "#f4f0dc");
+          break;
+        case "lantern":
+          drawIsoCuboid(object.x + 12, object.y + 20, 8, 8, 70, "#45331c");
+          drawIsoCuboid(object.x + 2, object.y + 8, 28, 28, 34, "#ffd166");
+          ctx.fillStyle = "rgba(255, 211, 102, 0.22)";
+          const glow = isoPoint(object.x + 16, object.y + 16, 35);
+          ctx.beginPath();
+          ctx.arc(glow.x, glow.y, 48, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case "stoneTable":
+          drawIsoCuboid(object.x, object.y, object.w, 62, 20, "#9b9da8");
+          drawIsoCuboid(object.x + 20, object.y + 18, 18, 18, 42, "#757986");
+          drawIsoCuboid(object.x + object.w - 38, object.y + 18, 18, 18, 42, "#757986");
+          break;
+        case "castle":
+          drawIsoCuboid(object.x, object.y, object.w, 120, 96, "#a6e9ff");
+          drawIsoCuboid(object.x + 16, object.y + 8, 30, 30, 150, "#e8fbff");
+          drawIsoCuboid(object.x + 98, object.y + 8, 30, 30, 150, "#e8fbff");
+          drawIsoCuboid(object.x + 58, object.y + 72, 34, 22, 48, "#56899a");
+          break;
+        case "statue":
+          drawIsoCuboid(object.x, object.y, 28, 28, 58, state.thawedStatues.includes(object.id) ? "#d58b62" : "#aeb4bd");
+          break;
+        case "mazeWall":
+          drawIsoCuboid(object.x, object.y, object.w, object.h, 46, state.season === "spring" ? "#3f8f50" : "#b9d9eb");
+          break;
+        case "tree":
+          drawIsoCuboid(object.x + 12, object.y + 22, 14, 14, 45, "#6c4227");
+          drawIsoCuboid(object.x, object.y, 42, 42, 72, state.season === "spring" ? "#2f8f4e" : "#24546b");
+          if (state.season === "winter") drawIsoCuboid(object.x + 4, object.y + 4, 34, 34, 84, "#f3fbff");
+          break;
+        case "pond":
+          drawIsoCuboid(object.x, object.y, object.w, object.h, 7, state.season === "spring" ? "#4ca6c8" : "#9be8ff");
+          break;
+        case "campfire":
+          drawIsoCuboid(object.x, object.y, 36, 36, 10, "#6b4428");
+          drawIsoCuboid(object.x + 12, object.y + 10, 12, 12, 32, "#ff8a30");
+          break;
+        case "candy":
+          drawIsoCuboid(object.x, object.y, 30, 30, 18, "#d84f7a");
+          drawIsoCuboid(object.x + 8, object.y + 8, 14, 14, 30, "#fff1a8");
+          break;
+        case "sign":
+          drawIsoCuboid(object.x + 15, object.y + 10, 8, 8, 42, "#6b4428");
+          drawIsoCuboid(object.x, object.y, 38, 12, 64, "#b7834c");
+          break;
+        case "rock":
+          drawIsoCuboid(object.x, object.y, object.w, object.h, 24, "#8b929c");
+          break;
+        case "flowerPatch":
+          drawIsoCuboid(object.x, object.y, object.w, object.h, 5, state.season === "spring" ? "#5fae5c" : "#d9eef8");
+          if (state.season === "spring") {
+            drawIsoCuboid(object.x + 12, object.y + 10, 8, 8, 16, "#ffd166");
+            drawIsoCuboid(object.x + 38, object.y + 24, 8, 8, 16, "#ff7ab6");
+          }
+          break;
+        case "queenBeacon":
+          if (state.season === "winter") {
+            const center = isoPoint(object.x + object.w / 2, object.y + object.h / 2, 70);
+            ctx.fillStyle = "rgba(137, 239, 255, 0.18)";
+            ctx.beginPath();
+            ctx.arc(center.x, center.y, 110, 0, Math.PI * 2);
+            ctx.fill();
+            drawIsoCuboid(object.x + 52, object.y + 52, 26, 26, 130, "#dff8ff");
+            drawIsoCuboid(object.x + 42, object.y + 42, 46, 46, 36, "#8fdcff");
+          }
+          break;
+      }
+    }
+
+    function drawIsoCharacter(character, options = {}) {
+      const isBoss = options.boss;
+      const x = character.x - (isBoss ? 30 : 8);
+      const y = character.y - (isBoss ? 30 : 8);
+      const body = character.color;
+      const skin = options.skin || "#f0c49d";
+      const hair = options.hair || "#5a2e22";
+      const moving = character === state.player && state.isMoving;
+      const pulse = character === state.player ? state.walkTime : Date.now() / 420 + character.x * 0.01;
+      const swing = moving ? Math.sin(pulse * 6) * 5 : Math.sin(pulse) * 1.5;
+      const scale = isBoss ? (options.scale || 3.4) : 1;
+
+      if (isBoss) {
+        const glow = isoPoint(character.x + character.w / 2, character.y + character.h / 2, 70);
+        ctx.fillStyle = "rgba(96, 216, 255, 0.32)";
+        ctx.beginPath();
+        ctx.arc(glow.x, glow.y, 175, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.58)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(glow.x, glow.y, 118 + Math.sin(Date.now() / 180) * 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      drawIsoCuboidAt(x + 4 * scale, y + 4 * scale + swing, 8 * scale, 10 * scale, 0, 28 * scale, shadeColor(body, -45));
+      drawIsoCuboidAt(x + 18 * scale, y + 4 * scale - swing, 8 * scale, 10 * scale, 0, 28 * scale, shadeColor(body, -45));
+      drawIsoCuboidAt(x + 2 * scale, y + 12 * scale - swing, 7 * scale, 10 * scale, 30 * scale, 34 * scale, shadeColor(body, -24));
+      drawIsoCuboidAt(x + 21 * scale, y + 12 * scale + swing, 7 * scale, 10 * scale, 30 * scale, 34 * scale, shadeColor(body, -24));
+      drawIsoCuboidAt(x + 8 * scale, y + 8 * scale, 16 * scale, 16 * scale, 28 * scale, 38 * scale, body);
+      drawIsoCuboidAt(x + 6 * scale, y + 6 * scale, 20 * scale, 20 * scale, 66 * scale, 22 * scale, skin);
+      drawIsoCuboidAt(x + 6 * scale, y + 6 * scale, 20 * scale, 20 * scale, 86 * scale, 8 * scale, hair);
+
+      if (options.horns) {
+        drawIsoCuboidAt(x + 2, y + 8, 5, 5, 88, 14, "#f4ead2");
+        drawIsoCuboidAt(x + 25, y + 8, 5, 5, 88, 14, "#f4ead2");
+      }
+      if (options.crown) {
+        drawIsoCuboidAt(x + 4 * scale, y + 4 * scale, 24 * scale, 24 * scale, 94 * scale, 8 * scale, "#eefbff");
+        drawIsoCuboidAt(x + 9 * scale, y + 9 * scale, 5 * scale, 5 * scale, 102 * scale, 12 * scale, "#78d9ff");
+        drawIsoCuboidAt(x + 19 * scale, y + 9 * scale, 5 * scale, 5 * scale, 102 * scale, 12 * scale, "#78d9ff");
+      }
+      if (options.mane) {
+        drawIsoCuboidAt(x + 2, y + 2, 28, 28, 62, 16, "#b96919");
+      }
+
+      if (isBoss) {
+        const label = isoPoint(character.x + character.w / 2, character.y, 260);
+        ctx.fillStyle = "rgba(16, 31, 48, 0.86)";
+        ctx.fillRect(label.x - 86, label.y - 34, 172, 30);
+        ctx.fillStyle = "#e8fbff";
+        ctx.font = "bold 22px Trebuchet MS";
+        ctx.textAlign = "center";
+        ctx.fillText("FROST QUEEN", label.x, label.y - 11);
+        ctx.fillStyle = "#89efff";
+        ctx.fillRect(label.x - 78, label.y, 156, 9);
+        ctx.textAlign = "left";
+      }
+    }
+
+    function drawIsoIceChallenge() {
+      if (!state.frostChallengeActive) return;
+      drawIsoCuboid(1010, 540, 410, 230, 6, "#8fdcff");
+      iceCrystals.forEach((crystal) => {
+        drawIsoCuboid(crystal.x, crystal.y, crystal.w, crystal.h, 45, "#e8fbff");
+      });
+      const label = isoPoint(1040, 800, 42);
+      ctx.fillStyle = "#143140";
+      ctx.font = "16px Trebuchet MS";
+      ctx.fillText(`Ice trial: ${Math.ceil(state.frostChallengeTimer / 60)}s`, label.x, label.y);
+    }
+
+    function drawSnowOrGrass() {
+      const spring = state.season === "spring";
+      const bounds = worldBounds();
+      ctx.fillStyle = spring ? "#78bd72" : "#dceefa";
+      ctx.fillRect(0, 0, bounds.width, bounds.height);
+
+      for (let y = 0; y < bounds.height; y += 38) {
+        for (let x = 0; x < bounds.width; x += 38) {
+          ctx.fillStyle = spring ? "rgba(255,255,255,0.08)" : "rgba(109,155,184,0.12)";
+          ctx.fillRect(x + 4, y + 8, 12, 3);
+          if (spring) {
+            ctx.fillStyle = "#f7d35a";
+            ctx.fillRect(x + 24, y + 20, 4, 4);
+          }
+        }
+      }
+
+      if (state.scene !== "mansion") {
+        ctx.strokeStyle = spring ? "rgba(58, 113, 60, 0.35)" : "rgba(53, 112, 150, 0.26)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 8]);
+        ctx.beginPath();
+        ctx.moveTo(735, 1082);
+        ctx.lineTo(735, 930);
+        ctx.lineTo(705, 930);
+        ctx.lineTo(705, 790);
+        ctx.lineTo(350, 790);
+        ctx.lineTo(350, 660);
+        ctx.lineTo(720, 660);
+        ctx.lineTo(720, 520);
+        ctx.lineTo(980, 520);
+        ctx.lineTo(980, 700);
+        ctx.lineTo(1285, 700);
+        ctx.lineTo(1285, 470);
+        ctx.lineTo(1190, 470);
+        ctx.lineTo(1190, 365);
+        ctx.lineTo(750, 365);
+        ctx.lineTo(750, 210);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    function drawObject(object) {
+      switch (object.type) {
+        case "wardrobe":
+          drawPixelRect(object.x, object.y, object.w, object.h, "#6a351e");
+          ctx.fillStyle = "#9f6238";
+          ctx.fillRect(object.x + 12, object.y + 10, 32, object.h - 20);
+          ctx.fillRect(object.x + 54, object.y + 10, 32, object.h - 20);
+          ctx.fillStyle = "#f4cf67";
+          ctx.fillRect(object.x + 45, object.y + 68, 7, 7);
+          break;
+        case "wardrobeBack":
+          drawPixelRect(object.x, object.y, object.w, object.h, "#6a351e");
+          ctx.fillStyle = "#f4f0dc";
+          ctx.fillRect(object.x + 15, object.y + 10, 28, 30);
+          break;
+        case "lantern":
+          ctx.fillStyle = "#45331c";
+          ctx.fillRect(object.x + 13, object.y, 6, object.h);
+          ctx.fillStyle = "rgba(255, 211, 102, 0.32)";
+          ctx.beginPath();
+          ctx.arc(object.x + 16, object.y + 28, 45, 0, Math.PI * 2);
+          ctx.fill();
+          drawPixelRect(object.x + 6, object.y + 22, 20, 22, "#ffd166");
+          break;
+        case "stoneTable":
+          drawPixelRect(object.x, object.y, object.w, object.h, "#9b9da8");
+          ctx.fillStyle = "#6e727e";
+          ctx.fillRect(object.x + 10, object.y + object.h, 16, 24);
+          ctx.fillRect(object.x + object.w - 26, object.y + object.h, 16, 24);
+          break;
+        case "castle":
+          drawPixelRect(object.x, object.y + 34, object.w, object.h - 34, "#a6e9ff");
+          ctx.fillStyle = "#e8fbff";
+          ctx.fillRect(object.x + 14, object.y, 22, 58);
+          ctx.fillRect(object.x + 78, object.y, 22, 58);
+          ctx.fillStyle = "#56899a";
+          ctx.fillRect(object.x + 45, object.y + 94, 28, 50);
+          break;
+        case "statue":
+          drawPixelRect(object.x, object.y, object.w, object.h, state.thawedStatues.includes(object.id) ? "#d58b62" : "#aeb4bd");
+          ctx.fillStyle = state.thawedStatues.includes(object.id) ? "#4f2f24" : "#737c88";
+          ctx.fillRect(object.x + 7, object.y + 8, 5, 5);
+          ctx.fillRect(object.x + 16, object.y + 8, 5, 5);
+          break;
+        case "mazeWall":
+          ctx.fillStyle = state.season === "spring" ? "#3f8f50" : "#b9d9eb";
+          ctx.fillRect(object.x, object.y, object.w, object.h);
+          ctx.fillStyle = state.season === "spring" ? "#65b86c" : "#f4fbff";
+          ctx.fillRect(object.x + 4, object.y + 4, object.w - 8, Math.max(6, object.h / 3));
+          ctx.strokeStyle = state.season === "spring" ? "#236733" : "#78abc8";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(object.x, object.y, object.w, object.h);
+          break;
+        case "tree":
+          ctx.fillStyle = "#6c4227";
+          ctx.fillRect(object.x + 14, object.y + 28, 10, 26);
+          ctx.fillStyle = state.season === "spring" ? "#2f8f4e" : "#24546b";
+          ctx.beginPath();
+          ctx.moveTo(object.x + 19, object.y);
+          ctx.lineTo(object.x, object.y + 36);
+          ctx.lineTo(object.x + 38, object.y + 36);
+          ctx.closePath();
+          ctx.fill();
+          if (state.season === "winter") {
+            ctx.fillStyle = "#f3fbff";
+            ctx.fillRect(object.x + 7, object.y + 18, 24, 5);
+          }
+          break;
+      }
+    }
+
+    function drawIceChallenge() {
+      if (!state.frostChallengeActive) return;
+
+      ctx.fillStyle = "rgba(83, 167, 199, 0.16)";
+      ctx.fillRect(1010, 540, 410, 230);
+      ctx.strokeStyle = "#eafcff";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(1010, 540, 410, 230);
+
+      iceCrystals.forEach((crystal) => {
+        ctx.fillStyle = "#e8fbff";
+        ctx.beginPath();
+        ctx.moveTo(crystal.x + crystal.w / 2, crystal.y - 6);
+        ctx.lineTo(crystal.x + crystal.w + 6, crystal.y + crystal.h / 2);
+        ctx.lineTo(crystal.x + crystal.w / 2, crystal.y + crystal.h + 6);
+        ctx.lineTo(crystal.x - 6, crystal.y + crystal.h / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#78d9ff";
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = "#143140";
+      ctx.font = "16px Trebuchet MS";
+      ctx.fillText(`Ice trial: ${Math.ceil(state.frostChallengeTimer / 60)}s`, 1040, 800);
+    }
+
+    function shadeColor(color, amount) {
+      const hex = color.replace("#", "");
+      const value = parseInt(hex, 16);
+      const r = Math.max(0, Math.min(255, (value >> 16) + amount));
+      const g = Math.max(0, Math.min(255, ((value >> 8) & 255) + amount));
+      const b = Math.max(0, Math.min(255, (value & 255) + amount));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function drawBlockPart(x, y, w, h, color) {
+      ctx.fillStyle = "#151922";
+      ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+      ctx.fillRect(x + 2, y + 2, Math.max(3, w - 5), 3);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.16)";
+      ctx.fillRect(x + w - 4, y + 3, 3, h - 5);
+    }
+
+    function drawBlockCharacter(character, options = {}) {
+      const x = character.x;
+      const y = character.y;
+      const body = character.color;
+      const skin = options.skin || "#f0c49d";
+      const hair = options.hair || "#5a2e22";
+
+      /* Block characters use square heads and chunky cuboid limbs. */
+      drawBlockPart(x + 4, y + 14, 6, 15, shadeColor(body, -24));
+      drawBlockPart(x + character.w - 10, y + 14, 6, 15, shadeColor(body, -24));
+      drawBlockPart(x + 8, y + 15, character.w - 16, 17, body);
+      drawBlockPart(x + 8, y + 31, 6, 10, shadeColor(body, -45));
+      drawBlockPart(x + character.w - 14, y + 31, 6, 10, shadeColor(body, -45));
+      drawBlockPart(x + 4, y, character.w - 8, 16, skin);
+
+      ctx.fillStyle = hair;
+      ctx.fillRect(x + 4, y, character.w - 8, 5);
+      ctx.fillRect(x + 4, y + 4, 4, 6);
+      ctx.fillStyle = "#111827";
+      ctx.fillRect(x + 8, y + 8, 3, 3);
+      ctx.fillRect(x + character.w - 12, y + 8, 3, 3);
+      ctx.fillStyle = "#7a342b";
+      ctx.fillRect(x + character.w / 2 - 2, y + 12, 5, 2);
+
+      if (options.crown) {
+        ctx.fillStyle = "#eefbff";
+        ctx.fillRect(x + 3, y - 8, character.w - 6, 6);
+        ctx.fillStyle = "#78d9ff";
+        ctx.fillRect(x + 6, y - 13, 4, 7);
+        ctx.fillRect(x + character.w - 10, y - 13, 4, 7);
+      }
+
+      if (options.horns) {
+        ctx.fillStyle = "#f4ead2";
+        ctx.fillRect(x + 1, y - 4, 5, 8);
+        ctx.fillRect(x + character.w - 6, y - 4, 5, 8);
+      }
+
+      if (options.mane) {
+        ctx.fillStyle = "#b96919";
+        ctx.fillRect(x, y - 2, character.w, 5);
+        ctx.fillRect(x, y + 3, 5, 18);
+        ctx.fillRect(x + character.w - 5, y + 3, 5, 18);
+      }
+    }
+
+    function drawNpc(npc) {
+      const looks = {
+        faun: { skin: "#d1a06e", hair: "#5d351b", horns: true },
+        dawnmane: { skin: "#d89a35", hair: "#7a3f10", mane: true },
+        frostQueen: { skin: "#dff8ff", hair: "#f8fdff", crown: true, boss: true },
+        eamon: { skin: "#f0c49d", hair: "#3d2a21" },
+        sora: { skin: "#f0c49d", hair: "#3f2b42" },
+        soraSpring: { skin: "#f0c49d", hair: "#3f2b42", crown: true },
+        peregrin: { skin: "#e8bd94", hair: "#6b3c24" },
+        peregrinSpring: { skin: "#e8bd94", hair: "#6b3c24", crown: true },
+        merrybark: { skin: "#8b5a34", hair: "#4b2c1c" }
+      };
+      drawBlockCharacter(npc, looks[npc.id] || {});
+    }
+
+    function getCharacterLooks(id) {
+      return {
+        faun: { skin: "#d1a06e", hair: "#5d351b", horns: true },
+        dawnmane: { skin: "#d89a35", hair: "#7a3f10", mane: true },
+        frostQueen: { skin: "#dff8ff", hair: "#f8fdff", crown: true, boss: true, scale: 3.4 },
+        eamon: { skin: "#f0c49d", hair: "#3d2a21" },
+        sora: { skin: "#f0c49d", hair: "#3f2b42" },
+        soraSpring: { skin: "#f0c49d", hair: "#3f2b42", crown: true },
+        peregrin: { skin: "#e8bd94", hair: "#6b3c24" },
+        peregrinSpring: { skin: "#e8bd94", hair: "#6b3c24", crown: true },
+        merrybark: { skin: "#8b5a34", hair: "#4b2c1c" }
+      }[id] || {};
+    }
+
+    function drawPlayer() {
+      drawBlockCharacter(state.player, { skin: "#f0c49d", hair: "#5a2e22" });
+    }
+
+    function drawIsoQuestMarker() {
+      if (state.quest >= quests.length) return;
+      const statueTarget = state.thawedStatues.includes("statue1") ? "statue2" : "statue1";
+      const targets = ["wardrobe", "lantern", "faun", "eamon", "stoneTable", statueTarget, "frostQueen", "frostQueen", "stoneTable"];
+      const targetId = targets[Math.min(state.quest, targets.length - 1)];
+      const target = objectById(targetId) || npcs.find((npc) => npc.id === targetId);
+      if (!target || (target.scene && target.scene !== state.scene)) return;
+      if (state.scene === "winter" && targetId === "wardrobe") return;
+
+      const bob = Math.sin(Date.now() / 160) * 8;
+      const point = isoPoint(target.x + target.w / 2, target.y + target.h / 2, 112 + bob);
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath();
+      ctx.moveTo(point.x, point.y);
+      ctx.lineTo(point.x - 11, point.y - 18);
+      ctx.lineTo(point.x + 11, point.y - 18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#7a4d00";
+      ctx.stroke();
+    }
+
+    function drawQueenPointer() {
+      if (state.scene !== "winter" || state.season !== "winter") return;
+      const queen = npcs.find((npc) => npc.id === "frostQueen");
+      const queenScreen = isoPoint(queen.x + queen.w / 2, queen.y + queen.h / 2, 90);
+      const onScreen = queenScreen.x > 40 && queenScreen.x < VIEW_WIDTH - 40 && queenScreen.y > 40 && queenScreen.y < VIEW_HEIGHT - 40;
+      if (onScreen) return;
+
+      const centerX = VIEW_WIDTH / 2;
+      const centerY = VIEW_HEIGHT / 2;
+      const angle = Math.atan2(queenScreen.y - centerY, queenScreen.x - centerX);
+      const pointerX = Math.max(62, Math.min(VIEW_WIDTH - 62, centerX + Math.cos(angle) * 300));
+      const pointerY = Math.max(62, Math.min(VIEW_HEIGHT - 62, centerY + Math.sin(angle) * 210));
+
+      ctx.save();
+      ctx.translate(pointerX, pointerY);
+      ctx.rotate(angle);
+      ctx.fillStyle = "rgba(16, 31, 48, 0.86)";
+      ctx.fillRect(-58, -28, 116, 56);
+      ctx.fillStyle = "#89efff";
+      ctx.beginPath();
+      ctx.moveTo(42, 0);
+      ctx.lineTo(6, -18);
+      ctx.lineTo(6, -7);
+      ctx.lineTo(-36, -7);
+      ctx.lineTo(-36, 7);
+      ctx.lineTo(6, 7);
+      ctx.lineTo(6, 18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = "#e8fbff";
+      ctx.font = "bold 14px Trebuchet MS";
+      ctx.textAlign = "center";
+      ctx.fillText("Frost Queen", pointerX, pointerY + 42);
+      ctx.textAlign = "left";
+    }
+
+    function drawIsoWorld() {
+      drawIsoGround();
+      drawIsoIceChallenge();
+
+      const drawables = [
+        ...getSceneObjects().map((item) => ({ kind: "object", item, depth: item.x + item.y + (item.w || 0) + (item.h || 0) })),
+        ...getVisibleNpcs().map((item) => ({ kind: "npc", item, depth: item.x + item.y + 70 })),
+        { kind: "player", item: state.player, depth: state.player.x + state.player.y + 80 }
+      ].sort((a, b) => a.depth - b.depth);
+
+      drawables.forEach((entry) => {
+        if (entry.kind === "object") drawIsoObject(entry.item);
+        if (entry.kind === "npc") drawIsoCharacter(entry.item, getCharacterLooks(entry.item.id));
+        if (entry.kind === "player") drawIsoCharacter(state.player, { skin: "#f0c49d", hair: "#5a2e22" });
+      });
+
+      drawIsoQuestMarker();
+      drawQueenPointer();
+    }
+
+    function drawQuestMarker() {
+      if (state.quest >= quests.length) return;
+      const statueTarget = state.thawedStatues.includes("statue1") ? "statue2" : "statue1";
+      const targets = ["wardrobe", "lantern", "faun", "eamon", "stoneTable", statueTarget, "frostQueen", "frostQueen", "stoneTable"];
+      const targetId = targets[Math.min(state.quest, targets.length - 1)];
+      const target = objectById(targetId) || npcs.find((npc) => npc.id === targetId);
+      if (!target || (target.scene && target.scene !== state.scene)) return;
+      if (state.scene === "mansion" && targetId !== "wardrobe") return;
+      if (state.scene === "winter" && targetId === "wardrobe") return;
+
+      const bob = Math.sin(Date.now() / 160) * 4;
+      ctx.fillStyle = "#ffd166";
+      ctx.beginPath();
+      ctx.moveTo(target.x + target.w / 2, target.y - 18 + bob);
+      ctx.lineTo(target.x + target.w / 2 - 9, target.y - 34 + bob);
+      ctx.lineTo(target.x + target.w / 2 + 9, target.y - 34 + bob);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawEndingText() {
+      if (state.quest < quests.length) return;
+      ctx.fillStyle = "rgba(38, 70, 47, 0.84)";
+      ctx.fillRect(154, 226, 452, 86);
+      ctx.strokeStyle = "#fff7d0";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(154, 226, 452, 86);
+      ctx.fillStyle = "#fff7d0";
+      ctx.font = "24px Trebuchet MS";
+      ctx.fillText("Spring has returned!", 270, 262);
+      ctx.font = "16px Trebuchet MS";
+      ctx.fillText("The four children are crowned as kind rulers.", 220, 292);
+    }
+
+    /* Main render pass draws the current scene, characters, marker, and ending state. */
+    function render() {
+      ctx.clearRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+
+      if (state.scene === "mansion") {
+        drawMansion();
+        getVisibleNpcs().forEach(drawNpc);
+        drawPlayer();
+        drawQuestMarker();
+      } else {
+        drawIsoWorld();
+      }
+
+      drawEndingText();
+    }
+
+    /* Game loop updates movement and redraws every frame. */
+    function loop() {
+      updatePlayer();
+      updateFrostChallenge();
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    /* Input listeners support both WASD and arrow-key movement. */
+    window.addEventListener("keydown", (event) => {
+      const key = event.key.toLowerCase();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
+        keys.add(key);
+        event.preventDefault();
+      }
+      if (key === " " || key === "enter") {
+        if (event.repeat) return;
+        interactPressed = true;
+        event.preventDefault();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      keys.delete(event.key.toLowerCase());
+    });
+
+    document.querySelectorAll(".touch-btn[data-key]").forEach((button) => {
+      const key = button.dataset.key;
+      const press = (event) => {
+        event.preventDefault();
+        keys.add(key);
+      };
+      const release = (event) => {
+        event.preventDefault();
+        keys.delete(key);
+      };
+      button.addEventListener("pointerdown", press);
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("pointerleave", release);
+    });
+
+    document.querySelectorAll(".touch-btn[data-interact]").forEach((button) => {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        interactPressed = true;
+      });
+    });
+
+    /* Reset button restores the first scene and all quest flags. */
+    restartButton.addEventListener("click", () => {
+      state.scene = "mansion";
+      state.quest = 0;
+      state.season = "winter";
+      state.candyTaken = false;
+      state.faunHelped = false;
+      state.guardianReturned = false;
+      state.thawedStatues = [];
+      state.frostLevel = 0;
+      state.frostChallengeActive = false;
+      state.frostChallengeTimer = 0;
+      state.player.x = 350;
+      state.player.y = 395;
+      state.player.safeX = 350;
+      state.player.safeY = 395;
+      state.camera.x = 0;
+      state.camera.y = 0;
+      hideMessage();
+      renderQuestList();
+    });
+
+    /* Initial bootstrapping. */
+    renderQuestList();
+    showMessage("Luma", "A kind young child stands in a wooden mansion before a very ordinary wardrobe. Or is it?", 240);
+    loop();
+  </script>
+</body>
+</html>

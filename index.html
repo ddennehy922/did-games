@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DID Games is Derek and the kids' browser arcade: fantasy adventures, co-op survival, and more games in progress." />
+  <title>DID Games | Family Browser Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..900;1,9..40,300..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a10;
+      --panel: #12151f;
+      --panel-2: #181d2a;
+      --text: #ffffff;
+      --muted: #b9c0d4;
+      --soft: #747d97;
+      --green: #1ed760;
+      --gold: #ffd166;
+      --blue: #66d9ff;
+      --pink: #ff6bd6;
+      --purple: #8b5cf6;
+      --danger: #ff6b6b;
+      --shadow: rgba(0, 0, 0, 0.55) 0 22px 80px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(102, 217, 255, 0.22), transparent 30vw),
+        radial-gradient(circle at 84% 6%, rgba(255, 107, 214, 0.19), transparent 28vw),
+        radial-gradient(circle at 52% 82%, rgba(30, 215, 96, 0.14), transparent 32vw),
+        linear-gradient(180deg, #080a10 0%, #101320 52%, #080a10 100%);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,.72), transparent 74%);
+    }
+
+    a { color: inherit; }
+
+    .page {
+      position: relative;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 54px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 34px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px;
+      background: rgba(12, 15, 23, .78);
+      box-shadow: rgba(0,0,0,.32) 0 10px 30px;
+      backdrop-filter: blur(18px);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      text-decoration: none;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      color: #061006;
+      box-shadow: rgba(30, 215, 96, .4) 0 0 28px;
+      font-size: 20px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .pill,
+    .sound-toggle {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: #1f2430;
+      color: var(--text);
+      text-decoration: none;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .pill:hover,
+    .sound-toggle:hover {
+      transform: translateY(-2px);
+      background: #2a3142;
+    }
+
+    .pill.primary {
+      background: var(--green);
+      color: #07120a;
+      box-shadow: rgba(30, 215, 96, .35) 0 10px 28px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(320px, .78fr);
+      gap: 28px;
+      align-items: center;
+      padding: 38px 0 48px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: #dce6ff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(46px, 8vw, 104px);
+      line-height: .88;
+      letter-spacing: -.08em;
+    }
+
+    .gradient-text {
+      display: block;
+      background: linear-gradient(90deg, #fff 0%, #d8f8ff 28%, #8cf3af 62%, #ffd166 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .hero-card {
+      position: relative;
+      min-height: 440px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 34px;
+      background:
+        linear-gradient(160deg, rgba(255,255,255,.12), transparent 34%),
+        linear-gradient(180deg, rgba(24, 29, 42, .96), rgba(12, 15, 23, .94));
+      box-shadow: var(--shadow);
+    }
+
+    .arcade-screen {
+      position: absolute;
+      inset: 24px;
+      overflow: hidden;
+      border: 8px solid #070910;
+      border-radius: 24px;
+      background: #111827;
+      box-shadow: inset rgba(255,255,255,.14) 0 0 0 1px, rgba(0,0,0,.44) 0 20px 60px;
+    }
+
+    .arcade-scene {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 24%, #ffe7a0 0 6%, transparent 7%),
+        linear-gradient(180deg, #1b2c58 0 42%, #193321 43% 100%);
+    }
+
+    .mountain {
+      position: absolute;
+      bottom: 34%;
+      width: 64%;
+      height: 38%;
+      background: linear-gradient(135deg, #5b6ea5, #243258);
+      clip-path: polygon(0 100%, 48% 0, 100% 100%);
+      opacity: .9;
+    }
+    .mountain.two { right: -8%; bottom: 34%; transform: scale(.92); opacity: .65; }
+
+    .castle {
+      position: absolute;
+      left: 10%;
+      bottom: 22%;
+      width: 26%;
+      height: 28%;
+      background: #d9c79f;
+      clip-path: polygon(0 100%, 0 28%, 12% 28%, 12% 12%, 28% 12%, 28% 28%, 46% 28%, 46% 0, 62% 0, 62% 28%, 82% 28%, 82% 12%, 100% 12%, 100% 100%);
+      filter: drop-shadow(0 14px 0 rgba(0,0,0,.2));
+    }
+
+    .hero-sprite {
+      position: absolute;
+      right: 18%;
+      bottom: 18%;
+      width: 56px;
+      height: 82px;
+      border-radius: 24px 24px 12px 12px;
+      background: linear-gradient(#ffd7a8 0 23%, #7c3aed 24% 68%, #2dd4bf 69% 100%);
+      box-shadow: rgba(0,0,0,.28) 14px 14px 0;
+      animation: bob 2.2s ease-in-out infinite;
+    }
+
+    .gamepad {
+      position: absolute;
+      right: 28px;
+      bottom: 28px;
+      width: 154px;
+      height: 92px;
+      border-radius: 44px;
+      background: #10131b;
+      box-shadow: rgba(0,0,0,.5) 0 18px 40px, inset rgba(255,255,255,.08) 0 0 0 1px;
+    }
+    .gamepad::before, .gamepad::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .gamepad::before { width: 18px; height: 18px; right: 38px; top: 28px; box-shadow: 24px 16px 0 var(--pink); }
+    .gamepad::after { width: 56px; height: 14px; left: 26px; top: 38px; border-radius: 4px; background: #d9e2ff; box-shadow: 21px -21px 0 -1px #d9e2ff; }
+
+    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      margin: 28px 0 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: .95;
+      letter-spacing: -.05em;
+    }
+
+    .section-head p {
+      max-width: 410px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .game-card {
+      position: relative;
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 28px;
+      background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: rgba(0,0,0,.28) 0 14px 40px;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(30,215,96,.55);
+      box-shadow: rgba(0,0,0,.45) 0 24px 70px;
+    }
+
+    .thumb {
+      position: relative;
+      min-height: 218px;
+      overflow: hidden;
+      background: #1f2937;
+    }
+
+    .thumb::after {
+      content: "▶";
+      position: absolute;
+      right: 18px;
+      bottom: 18px;
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--green);
+      color: #051008;
+      font-weight: 900;
+      box-shadow: rgba(30, 215, 96, .36) 0 10px 28px;
+    }
+
+    .thumb.wardrobe {
+      background:
+        radial-gradient(circle at 70% 24%, #fff4c8 0 8%, transparent 9%),
+        linear-gradient(180deg, #b7e8ff 0 46%, #f8fbff 47% 100%);
+    }
+    .thumb.wardrobe .tree,
+    .thumb.wardrobe .tree::before,
+    .thumb.wardrobe .tree::after {
+      position: absolute;
+      bottom: 24px;
+      width: 54px;
+      height: 130px;
+      background: linear-gradient(#244364, #13263b);
+      clip-path: polygon(50% 0, 100% 38%, 74% 38%, 100% 70%, 68% 70%, 90% 100%, 10% 100%, 32% 70%, 0 70%, 26% 38%, 0 38%);
+      content: "";
+    }
+    .thumb.wardrobe .tree { left: 34px; }
+    .thumb.wardrobe .tree::before { left: 98px; bottom: -10px; transform: scale(.86); }
+    .thumb.wardrobe .tree::after { left: 188px; bottom: -4px; transform: scale(1.08); }
+    .wardrobe-door {
+      position: absolute;
+      left: 50%;
+      bottom: 22px;
+      width: 76px;
+      height: 126px;
+      transform: translateX(-50%);
+      border: 6px solid #5a2d1d;
+      border-radius: 42px 42px 8px 8px;
+      background: linear-gradient(90deg, #6b3422, #9a5131);
+      box-shadow: 0 0 42px rgba(255,255,255,.8);
+    }
+
+    .thumb.stormfall {
+      background:
+        radial-gradient(circle at 74% 26%, rgba(255,209,102,.9) 0 8%, transparent 9%),
+        linear-gradient(180deg, #4b2947 0 44%, #302338 45% 62%, #21371f 63% 100%);
+    }
+    .tornado {
+      position: absolute;
+      left: 36%;
+      top: 28px;
+      width: 140px;
+      height: 164px;
+      background: repeating-radial-gradient(ellipse at center, rgba(226,232,255,.92) 0 9px, rgba(99,102,241,.25) 10px 19px);
+      clip-path: polygon(10% 0, 92% 0, 70% 28%, 84% 44%, 52% 66%, 64% 100%, 38% 100%, 46% 70%, 22% 50%, 38% 30%);
+      filter: blur(.2px);
+      opacity: .86;
+    }
+    .scrap {
+      position: absolute;
+      bottom: 30px;
+      left: 34px;
+      width: 44px;
+      height: 44px;
+      background: #b6c0ca;
+      transform: rotate(18deg);
+      box-shadow: 74px 18px 0 #7c8794, 162px -8px 0 #d6a44a;
+    }
+
+    .thumb.prince {
+      background:
+        radial-gradient(circle at 78% 18%, #ffe9a3 0 7%, transparent 8%),
+        linear-gradient(180deg, #315f55 0 43%, #7f6b3b 44% 100%);
+    }
+    .castle2 {
+      position: absolute;
+      left: 24px;
+      bottom: 38px;
+      width: 150px;
+      height: 124px;
+      background: #d3c7a0;
+      clip-path: polygon(0 100%, 0 30%, 14% 30%, 14% 12%, 30% 12%, 30% 30%, 48% 30%, 48% 0, 65% 0, 65% 30%, 84% 30%, 84% 12%, 100% 12%, 100% 100%);
+    }
+    .sword {
+      position: absolute;
+      right: 70px;
+      bottom: 26px;
+      width: 16px;
+      height: 160px;
+      border-radius: 999px;
+      background: linear-gradient(#f8fbff, #9fb2cc);
+      transform: rotate(36deg);
+      box-shadow: 0 0 30px rgba(255,255,255,.54);
+    }
+    .sword::before {
+      content: "";
+      position: absolute;
+      left: -27px;
+      bottom: 30px;
+      width: 70px;
+      height: 12px;
+      border-radius: 999px;
+      background: #ffd166;
+    }
+
+    .game-info {
+      display: grid;
+      gap: 14px;
+      padding: 20px;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,.08);
+      color: #d8def2;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .game-info h3 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -.04em;
+    }
+
+    .game-info p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.48;
+    }
+
+    .play-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .coming-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .coming-card,
+    .studio-card {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 24px;
+      background: rgba(18, 21, 31, .82);
+      box-shadow: rgba(0,0,0,.28) 0 14px 40px;
+    }
+
+    .coming-card {
+      min-height: 190px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .coming-card::before {
+      content: "";
+      position: absolute;
+      inset: -40% -20% auto auto;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: var(--glow, rgba(30,215,96,.22));
+      filter: blur(10px);
+    }
+
+    .coming-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 22px;
+      letter-spacing: -.03em;
+    }
+    .coming-card p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+    .studio-card {
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 20px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .meter {
+      height: 18px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+    }
+    .meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--blue)); }
+
+    .studio-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .studio-list li {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .studio-list b { color: var(--text); }
+
+    footer {
+      margin-top: 34px;
+      padding: 24px 0 0;
+      border-top: 1px solid rgba(255,255,255,.1);
+      color: var(--soft);
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-card { min-height: 340px; }
+      .games, .coming-grid { grid-template-columns: 1fr 1fr; }
+      .studio-card { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      .page { width: min(100% - 22px, 1180px); padding-top: 10px; }
+      .topbar { align-items: stretch; border-radius: 24px; flex-direction: column; }
+      .nav { display: grid; grid-template-columns: 1fr 1fr; }
+      .pill, .sound-toggle { text-align: center; padding: 11px 12px; }
+      .hero { padding-top: 18px; }
+      .hero-actions { display: grid; grid-template-columns: 1fr; }
+      .games, .coming-grid { grid-template-columns: 1fr; }
+      .game-card { min-height: 380px; }
+      .section-head { align-items: start; flex-direction: column; }
+      .arcade-screen { inset: 14px; }
+      .gamepad { transform: scale(.78); transform-origin: bottom right; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar" aria-label="DID Games navigation">
+      <a class="logo" href="./" aria-label="DID Games home">
+        <span class="logo-mark">✦</span>
+        <span>DID Games</span>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <a class="pill" href="#games">Games</a>
+        <a class="pill" href="#coming-soon">Coming Soon</a>
+        <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="false">Sound: Off</button>
+        <a class="pill primary" href="#games">Play Now</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">🎮 Family-made browser arcade</p>
+          <h1 id="hero-title">DID Games <span class="gradient-text">Adventure Portal</span></h1>
+          <p>Pick a game, jump in instantly, and help shape the next levels. Built for quick browser play, couch co-op experiments, and big kid-powered ideas.</p>
+          <div class="hero-actions">
+            <a class="pill primary" href="wardrobe-winter/">Start Wardrobe Winter</a>
+            <a class="pill" href="stormfall/">Play Stormfall</a>
+            <a class="pill" href="prince-castpeun/">Try Prince Castpeun</a>
+          </div>
+        </div>
+
+        <div class="hero-card" aria-label="Arcade illustration">
+          <div class="arcade-screen">
+            <div class="arcade-scene"></div>
+            <div class="mountain"></div>
+            <div class="mountain two"></div>
+            <div class="castle"></div>
+            <div class="hero-sprite"></div>
+          </div>
+          <div class="gamepad" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section id="games" aria-labelledby="games-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Live games</p>
+            <h2 id="games-title">Choose your quest</h2>
+          </div>
+          <p>Three playable prototypes are live now. Each card links straight into the game folder on Netlify.</p>
+        </div>
+
+        <div class="games">
+          <a class="game-card" href="wardrobe-winter/" aria-label="Play Wardrobe Winter">
+            <div class="thumb wardrobe"><span class="tree"></span><span class="wardrobe-door"></span></div>
+            <div class="game-info">
+              <div class="tag-row"><span class="tag">2D Adventure</span><span class="tag">Story Quest</span></div>
+              <h3>Wardrobe Winter</h3>
+              <p>Enter the wardrobe, follow the golden quest marker, meet allies, and turn winter into spring.</p>
+              <div class="play-line"><span>Play game</span><span>→</span></div>
+            </div>
+          </a>
+
+          <a class="game-card" href="stormfall/" aria-label="Play Stormfall">
+            <div class="thumb stormfall"><span class="tornado"></span><span class="scrap"></span></div>
+            <div class="game-info">
+              <div class="tag-row"><span class="tag">Co-op Survival</span><span class="tag">Boss Fights</span></div>
+              <h3>Stormfall</h3>
+              <p>Gather resources, build camp, revive teammates, and battle through Scrapyard Forest after the tornado.</p>
+              <div class="play-line"><span>Play game</span><span>→</span></div>
+            </div>
+          </a>
+
+          <a class="game-card" href="prince-castpeun/" aria-label="Play Prince Castpeun">
+            <div class="thumb prince"><span class="castle2"></span><span class="sword"></span></div>
+            <div class="game-info">
+              <div class="tag-row"><span class="tag">Fantasy Action</span><span class="tag">Party Heroes</span></div>
+              <h3>Prince Castpeun</h3>
+              <p>Switch heroes, collect relics, answer the horn call, and push through a third-person fantasy prototype.</p>
+              <div class="play-line"><span>Play game</span><span>→</span></div>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <section id="coming-soon" aria-labelledby="coming-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Roadmap</p>
+            <h2 id="coming-title">Coming soon</h2>
+          </div>
+          <p>Ideas ready for the next family game night build session.</p>
+        </div>
+
+        <div class="coming-grid">
+          <article class="coming-card" style="--glow: rgba(102,217,255,.24)">
+            <strong>Game thumbnails v2</strong>
+            <p>Swap these CSS poster-art cards with custom screenshots or kid-drawn cover art from each game.</p>
+          </article>
+          <article class="coming-card" style="--glow: rgba(255,209,102,.24)">
+            <strong>New levels</strong>
+            <p>Flooded ruins, mountain caves, secret wardrobe rooms, bonus bosses, and collectible achievements.</p>
+          </article>
+          <article class="coming-card" style="--glow: rgba(255,107,214,.22)">
+            <strong>Family scoreboard</strong>
+            <p>Track fastest wins, relic counts, boss clears, and high scores for each player.</p>
+          </article>
+        </div>
+
+        <article class="studio-card" aria-label="DID Games studio status">
+          <div>
+            <p class="eyebrow">Build status</p>
+            <h2>Arcade upgrade installed</h2>
+            <p style="color: var(--muted); line-height: 1.55; margin: 14px 0 18px;">Homepage polish, mobile layout, thumbnails, coming-soon roadmap, and a tiny optional sound effect button are now in the local Netlify folder.</p>
+            <div class="meter" aria-label="Arcade polish progress"><span style="width: 84%"></span></div>
+          </div>
+          <ul class="studio-list">
+            <li>✅ <span><b>Professional arcade look:</b> dark game-portal layout with glowing buttons and cards.</span></li>
+            <li>✅ <span><b>Game thumbnails:</b> custom CSS artwork for all three live games.</span></li>
+            <li>✅ <span><b>Mobile friendly:</b> cards and navigation collapse cleanly on phones and tablets.</span></li>
+            <li>✅ <span><b>Sound effects:</b> press Sound: Off, then hover/click cards and buttons.</span></li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <strong>DID Games</strong> — built by Derek and the kids. Keep creating, keep testing, keep playing.
+    </footer>
+  </div>
+
+  <script>
+    const soundToggle = document.getElementById('soundToggle');
+    let audioContext = null;
+    let soundEnabled = false;
+
+    function beep(frequency = 440, duration = 0.05, type = 'sine', gain = 0.025) {
+      if (!soundEnabled) return;
+      audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      volume.gain.value = gain;
+      oscillator.connect(volume);
+      volume.connect(audioContext.destination);
+      oscillator.start();
+      volume.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+      oscillator.stop(audioContext.currentTime + duration);
+    }
+
+    soundToggle.addEventListener('click', async () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+      soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+      if (soundEnabled) {
+        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') await audioContext.resume();
+        beep(523, .07, 'square', .035);
+        setTimeout(() => beep(784, .08, 'triangle', .03), 90);
+      }
+    });
+
+    document.querySelectorAll('a, button, .game-card').forEach((element) => {
+      element.addEventListener('mouseenter', () => beep(330, .035, 'triangle', .018));
+      element.addEventListener('click', () => beep(660, .045, 'square', .025));
+    });
+  </script>
+</body>
+</html>

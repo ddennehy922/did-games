@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prince Castpeun</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <a class="back-home" href="../" aria-label="Back to DID Games arcade">← Arcade</a>
+    <main id="game-shell" aria-label="Prince Castpeun playable prototype">
+      <canvas id="game" width="1280" height="720"></canvas>
+
+      <section id="hud" aria-live="polite">
+        <div class="brand">
+          <span>Prince Castpeun</span>
+          <small>Co-op prototype</small>
+        </div>
+        <div class="hero-panel">
+          <div id="hero-name">Lucy</div>
+          <div class="bar-frame"><div id="health-fill"></div></div>
+          <div id="hero-kit">Dagger + healing potion</div>
+        </div>
+        <div id="party"></div>
+        <div class="status-stack">
+          <div id="level-name">Level 1: The Horn Call</div>
+          <div id="objective">Objective: Reach the wardrobe</div>
+          <div id="relics">Relics: 0 / 6</div>
+        </div>
+      </section>
+
+      <section id="dialogue">
+        <strong id="speaker">Lucy</strong>
+        <p id="dialogue-text">The horn is calling from spring Narnia. We have to go back through the wardrobe.</p>
+      </section>
+
+      <section id="complete-banner">
+        <strong>Level Complete</strong>
+        <span id="complete-text">Continuing to the next level...</span>
+      </section>
+
+      <section id="controls">
+        <span>WASD move</span>
+        <span>Mouse aim</span>
+        <span>Click / Space attack</span>
+        <span>Q heal</span>
+        <span>Shift sprint</span>
+        <span>1-5 heroes</span>
+        <span>N next level</span>
+      </section>
+
+      <section id="touch-controls" aria-label="Touch controls">
+        <div class="touch-pad" aria-label="Move">
+          <span></span><button data-key="w" type="button">▲</button><span></span>
+          <button data-key="a" type="button">◀</button><span></span><button data-key="d" type="button">▶</button>
+          <span></span><button data-key="s" type="button">▼</button><span></span>
+        </div>
+        <div class="touch-actions">
+          <button data-key=" " type="button">Attack</button>
+          <button data-key="q" type="button">Heal</button>
+          <button data-key="shift" type="button">Sprint</button>
+        </div>
+      </section>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
