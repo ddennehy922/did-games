@@ -13,6 +13,7 @@
       --green: #25f07a;
       --gold: #ffd166;
       --red: #ff5d73;
+      --purple: #9b7cff;
       --text: #f8fbff;
       --muted: #b9c6da;
     }
@@ -72,7 +73,7 @@
     }
     .badge { padding: 10px 12px; font-weight: 900; }
     .stats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-    .stat { padding: 8px 10px; min-width: 78px; text-align: center; }
+    .stat { padding: 8px 10px; min-width: 72px; text-align: center; }
     .stat small { display: block; color: var(--muted); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
     .stat b { font-size: 18px; }
     .center {
@@ -85,13 +86,24 @@
       pointer-events: none;
     }
     .start-card {
-      width: min(560px, 92%);
+      width: min(640px, 94%);
       padding: 24px;
       text-align: center;
       pointer-events: auto;
     }
     h1 { margin: 0; font-size: clamp(34px, 7vw, 72px); line-height: .9; letter-spacing: -.06em; }
     .start-card p { color: var(--muted); line-height: 1.5; }
+    .pilot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+    .pilot {
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      padding: 11px 8px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .pilot.active { outline: 2px solid var(--green); background: rgba(37,240,122,.16); }
     button {
       border: 0;
       border-radius: 999px;
@@ -103,7 +115,33 @@
       cursor: pointer;
       box-shadow: rgba(37,240,122,.3) 0 12px 30px;
     }
+    .mini-button { padding: 9px 12px; background: rgba(255,255,255,.14); color: white; box-shadow: none; border: 1px solid rgba(255,255,255,.16); }
     .hint { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    .bossbar {
+      position: absolute;
+      left: 50%;
+      top: 76px;
+      z-index: 6;
+      width: min(520px, 70%);
+      transform: translateX(-50%);
+      display: none;
+      padding: 9px 12px;
+    }
+    .bossbar strong { display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; }
+    .bossmeter { height: 12px; margin-top: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
+    .bossmeter span { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--red), var(--gold)); }
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 132px;
+      z-index: 6;
+      transform: translateX(-50%);
+      display: none;
+      padding: 9px 14px;
+      color: white;
+      font-weight: 950;
+      text-align: center;
+    }
     .controls {
       position: absolute;
       left: 0;
@@ -136,9 +174,11 @@
       .controls { display: flex; }
       .hud { top: 10px; left: 10px; right: 10px; }
       .badge { font-size: 12px; }
-      .stat { min-width: 60px; padding: 6px 8px; }
+      .stat { min-width: 58px; padding: 6px 7px; }
       .stat b { font-size: 15px; }
       .home { top: 8px; left: 8px; padding: 8px 10px; font-size: 13px; }
+      .pilot-grid { grid-template-columns: 1fr; }
+      .bossbar { top: 90px; width: 86%; }
     }
   </style>
 </head>
@@ -148,19 +188,32 @@
     <section class="shell" aria-label="Drone Defender game">
       <canvas id="game" width="1280" height="720"></canvas>
       <div class="hud">
-        <div class="badge">🚁 Drone Defender</div>
+        <div class="badge">🚁 Drone Defender: Boss Raid</div>
         <div class="stats">
           <div class="stat panel"><small>Score</small><b id="score">0</b></div>
+          <div class="stat panel"><small>High</small><b id="high">0</b></div>
           <div class="stat panel"><small>Wave</small><b id="wave">1</b></div>
           <div class="stat panel"><small>Base</small><b id="base">100%</b></div>
+          <div class="stat panel"><small>Power</small><b id="power">Laser</b></div>
         </div>
       </div>
+      <div class="bossbar panel" id="bossBar">
+        <strong><span>Boss Drone</span><span id="bossHpText">100%</span></strong>
+        <div class="bossmeter"><span id="bossMeter"></span></div>
+      </div>
+      <div class="toast panel" id="toast">Power-up!</div>
       <div class="center" id="overlay">
-        <div class="start-card panel">
+        <div class="start-card panel" id="startCard">
           <h1>Drone Defender</h1>
-          <p>Fly patrol over the city. Stop rogue drones before they reach the base. Grab green battery packs to repair damage and survive as many waves as you can.</p>
-          <button id="startBtn">Start Mission</button>
-          <div class="hint">Keyboard: WASD/Arrows to fly, Space to fire. Phone: use the touch controls.</div>
+          <p><b>Boss Raid update:</b> battle huge boss drones, grab power-ups like lasers/missiles/shields, hear arcade sound effects, and chase the saved high score.</p>
+          <div class="pilot-grid" aria-label="Choose your pilot">
+            <button class="pilot active" data-pilot="Ace">Ace<br><small>Balanced</small></button>
+            <button class="pilot" data-pilot="Bolt">Bolt<br><small>Fast drone</small></button>
+            <button class="pilot" data-pilot="Nova">Nova<br><small>Rapid fire</small></button>
+          </div>
+          <button id="startBtn">Start Boss Raid</button>
+          <button class="mini-button" id="soundBtn" type="button">Sound: Off</button>
+          <div class="hint">Keyboard: WASD/Arrows to fly, Space to fire. Phone: use the touch controls. Bosses arrive every 3 waves.</div>
         </div>
       </div>
       <div class="controls" aria-label="Touch controls">
@@ -179,58 +232,182 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
+    const highEl = document.getElementById('high');
     const waveEl = document.getElementById('wave');
     const baseEl = document.getElementById('base');
+    const powerEl = document.getElementById('power');
     const overlay = document.getElementById('overlay');
     const startBtn = document.getElementById('startBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const bossBar = document.getElementById('bossBar');
+    const bossMeter = document.getElementById('bossMeter');
+    const bossHpText = document.getElementById('bossHpText');
+    const toast = document.getElementById('toast');
 
     const W = canvas.width;
     const H = canvas.height;
     const keys = { up: false, down: false, left: false, right: false, fire: false };
+    const pilots = {
+      Ace: { speed: 365, cooldown: .17, color: '#66e8ff' },
+      Bolt: { speed: 440, cooldown: .18, color: '#25f07a' },
+      Nova: { speed: 345, cooldown: .12, color: '#ffd166' }
+    };
+    let selectedPilot = 'Ace';
     let running = false;
-    let gameOver = false;
     let last = 0;
     let spawnTimer = 0;
     let packTimer = 8;
     let shotTimer = 0;
+    let boss = null;
+    let bossWave = 0;
     let score = 0;
     let wave = 1;
     let base = 100;
+    let highScore = Number(localStorage.getItem('droneDefenderHighScore') || 0);
+    let audioContext = null;
+    let soundEnabled = false;
+    let toastTimer = 0;
 
-    const player = { x: 180, y: H / 2, r: 22, speed: 360 };
+    const player = { x: 180, y: H / 2, r: 22, speed: 365, cooldown: .17, shield: 0, weapon: 'Laser', weaponTimer: 0, color: '#66e8ff' };
     const shots = [];
+    const missiles = [];
     const enemies = [];
     const packs = [];
     const sparks = [];
 
-    function reset() {
-      player.x = 180; player.y = H / 2;
-      shots.length = 0; enemies.length = 0; packs.length = 0; sparks.length = 0;
-      score = 0; wave = 1; base = 100; spawnTimer = 0; packTimer = 6; shotTimer = 0;
-      gameOver = false; running = true; overlay.style.display = 'none'; updateHud();
+    highEl.textContent = highScore;
+
+    function beep(frequency = 440, duration = .06, type = 'sine', gain = .028) {
+      if (!soundEnabled) return;
+      audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      volume.gain.value = gain;
+      oscillator.connect(volume);
+      volume.connect(audioContext.destination);
+      oscillator.start();
+      volume.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+      oscillator.stop(audioContext.currentTime + duration);
     }
 
-    function updateHud() { scoreEl.textContent = score; waveEl.textContent = wave; baseEl.textContent = Math.max(0, Math.round(base)) + '%'; }
+    function reset() {
+      const p = pilots[selectedPilot];
+      player.x = 180; player.y = H / 2; player.speed = p.speed; player.cooldown = p.cooldown; player.color = p.color;
+      player.shield = 0; player.weapon = 'Laser'; player.weaponTimer = 0;
+      shots.length = 0; missiles.length = 0; enemies.length = 0; packs.length = 0; sparks.length = 0;
+      boss = null; bossWave = 0; score = 0; wave = 1; base = 100; spawnTimer = 0; packTimer = 5; shotTimer = 0;
+      running = true; overlay.style.display = 'none'; showToast(`${selectedPilot} launched!`, '#25f07a'); updateHud(); beep(660, .08, 'triangle');
+    }
+
+    function updateHud() {
+      scoreEl.textContent = score;
+      highEl.textContent = highScore;
+      waveEl.textContent = wave;
+      baseEl.textContent = Math.max(0, Math.round(base)) + '%';
+      powerEl.textContent = player.shield > 0 ? 'Shield' : player.weapon;
+      if (boss) {
+        const pct = Math.max(0, boss.hp / boss.maxHp * 100);
+        bossBar.style.display = 'block';
+        bossMeter.style.width = pct + '%';
+        bossHpText.textContent = Math.round(pct) + '%';
+      } else {
+        bossBar.style.display = 'none';
+      }
+    }
     function rand(min, max) { return Math.random() * (max - min) + min; }
     function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+    function showToast(message, color = '#66e8ff') { toast.textContent = message; toast.style.display = 'block'; toast.style.borderColor = color; toastTimer = 1.8; }
 
     function spawnEnemy() {
       const speed = rand(90, 145) + wave * 12;
-      enemies.push({ x: W + 40, y: rand(95, H - 95), r: rand(17, 25), speed, wobble: rand(0, Math.PI * 2), hp: wave > 4 ? 2 : 1 });
+      const tough = wave > 4 && Math.random() < .42;
+      enemies.push({ type: tough ? 'armored' : 'scout', x: W + 40, y: rand(95, H - 95), r: tough ? 29 : rand(17, 25), speed: tough ? speed * .72 : speed, wobble: rand(0, Math.PI * 2), hp: tough ? 3 : (wave > 4 ? 2 : 1), maxHp: tough ? 3 : (wave > 4 ? 2 : 1) });
     }
-    function spawnPack() { packs.push({ x: W + 30, y: rand(105, H - 105), r: 17, speed: 120 }); }
-    function addSpark(x, y, color = '#66e8ff') { for (let i = 0; i < 12; i++) sparks.push({ x, y, vx: rand(-180, 180), vy: rand(-180, 180), life: rand(.25, .55), color }); }
+    function spawnBoss() {
+      bossWave = wave;
+      boss = { x: W + 130, y: H / 2, r: 62, speed: 82 + wave * 5, wobble: rand(0, Math.PI * 2), hp: 18 + wave * 7, maxHp: 18 + wave * 7, burst: 0 };
+      showToast('Boss drone inbound!', '#ff5d73'); beep(130, .22, 'sawtooth', .045);
+    }
+    function spawnPack() {
+      const roll = Math.random();
+      const type = roll < .34 ? 'repair' : roll < .57 ? 'missile' : roll < .8 ? 'rapid' : 'shield';
+      packs.push({ type, x: W + 30, y: rand(105, H - 105), r: 18, speed: 120 });
+    }
+    function addSpark(x, y, color = '#66e8ff', count = 12) { for (let i = 0; i < count; i++) sparks.push({ x, y, vx: rand(-220, 220), vy: rand(-220, 220), life: rand(.25, .65), color }); }
 
     function fire() {
       if (shotTimer > 0) return;
-      shots.push({ x: player.x + 28, y: player.y, vx: 620, r: 6 });
-      shotTimer = .18;
+      const cooldown = player.weapon === 'Rapid' ? player.cooldown * .48 : player.cooldown;
+      if (player.weapon === 'Missile') {
+        missiles.push({ x: player.x + 28, y: player.y, vx: 430, r: 9, turn: 0 });
+        shotTimer = cooldown * 2.4;
+        beep(220, .08, 'sawtooth');
+      } else {
+        shots.push({ x: player.x + 28, y: player.y - (player.weapon === 'Rapid' ? 8 : 0), vx: 650, r: 6, damage: player.weapon === 'Rapid' ? 1 : 1 });
+        if (player.weapon === 'Rapid') shots.push({ x: player.x + 28, y: player.y + 8, vx: 650, r: 5, damage: 1 });
+        shotTimer = cooldown;
+        beep(520, .035, 'square', .018);
+      }
+    }
+
+    function targetForMissile(m) {
+      let target = boss;
+      let best = target ? Math.abs(target.x - m.x) + Math.abs(target.y - m.y) : Infinity;
+      for (const e of enemies) {
+        const d = Math.abs(e.x - m.x) + Math.abs(e.y - m.y);
+        if (d < best) { best = d; target = e; }
+      }
+      return target;
+    }
+
+    function damageEnemy(e, amount, i) {
+      e.hp -= amount;
+      addSpark(e.x, e.y, e.type === 'armored' ? '#ffd166' : '#66e8ff', 8);
+      if (e.hp <= 0) {
+        score += e.type === 'armored' ? 55 : 25;
+        addSpark(e.x, e.y, '#66e8ff', 18);
+        enemies.splice(i, 1);
+        beep(760, .05, 'triangle');
+      }
+    }
+    function damageBoss(amount) {
+      if (!boss) return;
+      boss.hp -= amount;
+      addSpark(boss.x, boss.y, '#ff5d73', 7);
+      if (boss.hp <= 0) {
+        score += 300 + wave * 25;
+        addSpark(boss.x, boss.y, '#ffd166', 48);
+        showToast('Boss defeated! +300', '#ffd166');
+        beep(880, .18, 'triangle', .04);
+        boss = null;
+        base = Math.min(100, base + 14);
+      }
+    }
+
+    function applyPack(p) {
+      if (p.type === 'repair') { base = Math.min(100, base + 22); showToast('Base repaired +22%', '#25f07a'); }
+      if (p.type === 'missile') { player.weapon = 'Missile'; player.weaponTimer = 9; showToast('Missiles armed!', '#ffd166'); }
+      if (p.type === 'rapid') { player.weapon = 'Rapid'; player.weaponTimer = 10; showToast('Rapid lasers!', '#66e8ff'); }
+      if (p.type === 'shield') { player.shield = 8; showToast('Shield online!', '#9b7cff'); }
+      score += 12; beep(980, .08, 'triangle');
+    }
+
+    function takeBaseDamage(amount, x, y) {
+      if (player.shield > 0) { player.shield = Math.max(0, player.shield - 2.5); addSpark(x, y, '#9b7cff', 16); beep(300, .06, 'triangle'); return; }
+      base -= amount; addSpark(x, y, '#ff5d73', 18); beep(150, .08, 'sawtooth');
     }
 
     function update(dt) {
       if (!running) return;
       wave = 1 + Math.floor(score / 250);
       shotTimer = Math.max(0, shotTimer - dt);
+      player.weaponTimer = Math.max(0, player.weaponTimer - dt);
+      player.shield = Math.max(0, player.shield - dt);
+      if (player.weaponTimer <= 0 && player.weapon !== 'Laser') player.weapon = 'Laser';
+      if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toast.style.display = 'none'; }
+
       const dx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
       const dy = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
       const len = Math.hypot(dx, dy) || 1;
@@ -239,48 +416,65 @@
       if (keys.fire) fire();
 
       spawnTimer -= dt;
-      if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = Math.max(.42, 1.25 - wave * .08); }
+      if (spawnTimer <= 0 && !boss) { spawnEnemy(); spawnTimer = Math.max(.36, 1.18 - wave * .07); }
+      if (!boss && wave >= 3 && wave % 3 === 0 && bossWave !== wave) spawnBoss();
       packTimer -= dt;
-      if (packTimer <= 0) { spawnPack(); packTimer = rand(9, 14); }
+      if (packTimer <= 0) { spawnPack(); packTimer = rand(7, 12); }
 
       for (const s of shots) s.x += s.vx * dt;
+      for (const m of missiles) {
+        const target = targetForMissile(m);
+        if (target) m.y += Math.sign(target.y - m.y) * Math.min(240 * dt, Math.abs(target.y - m.y));
+        m.x += m.vx * dt;
+      }
       for (const e of enemies) { e.x -= e.speed * dt; e.y += Math.sin(performance.now() / 280 + e.wobble) * 26 * dt; }
+      if (boss) {
+        boss.x = Math.max(W - 230, boss.x - boss.speed * dt);
+        boss.y = H / 2 + Math.sin(performance.now() / 520 + boss.wobble) * 190;
+        boss.burst -= dt;
+        if (boss.burst <= 0) { enemies.push({ type: 'scout', x: boss.x - 70, y: boss.y + rand(-70, 70), r: 18, speed: 185 + wave * 8, wobble: rand(0, Math.PI * 2), hp: 1, maxHp: 1 }); boss.burst = 2.4; }
+      }
       for (const p of packs) p.x -= p.speed * dt;
       for (const sp of sparks) { sp.x += sp.vx * dt; sp.y += sp.vy * dt; sp.life -= dt; }
 
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
-        if (e.x < 80) { base -= 12; addSpark(78, e.y, '#ff5d73'); enemies.splice(i, 1); continue; }
-        if (dist(player, e) < player.r + e.r) { base -= 18; addSpark(e.x, e.y, '#ff5d73'); enemies.splice(i, 1); continue; }
-        for (let j = shots.length - 1; j >= 0; j--) {
-          if (dist(e, shots[j]) < e.r + shots[j].r) {
-            shots.splice(j, 1); e.hp--;
-            if (e.hp <= 0) { score += 25; addSpark(e.x, e.y, '#66e8ff'); enemies.splice(i, 1); }
-            break;
-          }
-        }
+        if (e.x < 80) { takeBaseDamage(e.type === 'armored' ? 18 : 12, 78, e.y); enemies.splice(i, 1); continue; }
+        if (dist(player, e) < player.r + e.r) { takeBaseDamage(e.type === 'armored' ? 25 : 18, e.x, e.y); enemies.splice(i, 1); continue; }
+        for (let j = shots.length - 1; j >= 0; j--) if (dist(e, shots[j]) < e.r + shots[j].r) { const dmg = shots[j].damage; shots.splice(j, 1); damageEnemy(e, dmg, i); break; }
+        for (let j = missiles.length - 1; j >= 0; j--) if (enemies[i] && dist(e, missiles[j]) < e.r + missiles[j].r + 8) { missiles.splice(j, 1); damageEnemy(e, 4, i); break; }
+      }
+      if (boss) {
+        if (dist(player, boss) < player.r + boss.r) { takeBaseDamage(28, boss.x, boss.y); boss.x += 80; }
+        if (boss.x < 112) { takeBaseDamage(1.2 * dt * 60, 80, boss.y); }
+        for (let j = shots.length - 1; j >= 0; j--) if (dist(boss, shots[j]) < boss.r + shots[j].r) { shots.splice(j, 1); damageBoss(1); }
+        for (let j = missiles.length - 1; j >= 0; j--) if (boss && dist(boss, missiles[j]) < boss.r + missiles[j].r + 10) { missiles.splice(j, 1); damageBoss(5); }
       }
       for (let i = packs.length - 1; i >= 0; i--) {
         const p = packs[i];
         if (p.x < -40) packs.splice(i, 1);
-        else if (dist(player, p) < player.r + p.r) { base = Math.min(100, base + 18); score += 10; addSpark(p.x, p.y, '#25f07a'); packs.splice(i, 1); }
+        else if (dist(player, p) < player.r + p.r) { applyPack(p); addSpark(p.x, p.y, packColor(p.type), 20); packs.splice(i, 1); }
       }
       for (let i = shots.length - 1; i >= 0; i--) if (shots[i].x > W + 30) shots.splice(i, 1);
+      for (let i = missiles.length - 1; i >= 0; i--) if (missiles[i].x > W + 40) missiles.splice(i, 1);
       for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
+      if (score > highScore) { highScore = score; localStorage.setItem('droneDefenderHighScore', String(highScore)); }
       if (base <= 0) endGame();
       updateHud();
     }
 
     function endGame() {
-      running = false; gameOver = true;
+      running = false;
       overlay.style.display = 'grid';
-      overlay.querySelector('.start-card').innerHTML = `<h1>Mission Complete</h1><p>You scored <b>${score}</b> and reached wave <b>${wave}</b>. The base needs another defender run.</p><button id="restartBtn">Fly Again</button><div class="hint">Tip: collect green battery packs to repair the base.</div>`;
+      const newRecord = score >= highScore && score > 0;
+      overlay.querySelector('.start-card').innerHTML = `<h1>${newRecord ? 'New High Score!' : 'Mission Complete'}</h1><p>You scored <b>${score}</b>, reached wave <b>${wave}</b>, and flew as <b>${selectedPilot}</b>. High score: <b>${highScore}</b>.</p><button id="restartBtn">Fly Again</button><div class="hint">Tip: missiles hit bosses hard. Shields block collisions and base damage.</div>`;
       document.getElementById('restartBtn').addEventListener('click', reset);
+      beep(180, .28, 'sawtooth', .035);
     }
 
-    function drawDrone(x, y, scale = 1, hostile = false) {
+    function drawDrone(x, y, scale = 1, hostile = false, color = '#66e8ff') {
       ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
-      ctx.fillStyle = hostile ? '#ff5d73' : '#66e8ff';
+      ctx.fillStyle = hostile ? '#ff5d73' : color;
       ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.roundRect(-24, -11, 48, 22, 9); ctx.fill(); ctx.stroke();
       ctx.fillStyle = hostile ? '#3a0710' : '#061726'; ctx.fillRect(-8, -5, 18, 10);
@@ -290,6 +484,17 @@
       }
       ctx.restore();
     }
+    function drawBoss(b) {
+      ctx.save(); ctx.translate(b.x, b.y);
+      ctx.fillStyle = '#35112a'; ctx.strokeStyle = '#ff5d73'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.roundRect(-70, -34, 140, 68, 24); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ff5d73'; ctx.fillRect(-34, -10, 28, 20); ctx.fillRect(12, -10, 28, 20);
+      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 7;
+      for (const [rx, ry] of [[-104,-58],[104,-58],[-104,58],[104,58]]) { ctx.beginPath(); ctx.ellipse(rx, ry, 34, 8, performance.now()/65, 0, Math.PI*2); ctx.stroke(); }
+      ctx.restore();
+    }
+    function packColor(type) { return { repair: '#25f07a', missile: '#ffd166', rapid: '#66e8ff', shield: '#9b7cff' }[type] || '#25f07a'; }
+    function packLabel(type) { return { repair: '+', missile: 'M', rapid: 'R', shield: 'S' }[type] || '+'; }
 
     function render() {
       ctx.clearRect(0, 0, W, H);
@@ -302,13 +507,16 @@
       ctx.fillStyle = '#07101b'; ctx.fillRect(0, H - 82, W, 82);
       ctx.fillStyle = '#0c1b2c';
       for (let x = 0; x < W; x += 80) ctx.fillRect(x, H - 82 - ((x * 7) % 90), 54, 160);
-      ctx.fillStyle = 'rgba(37,240,122,.16)'; ctx.fillRect(30, 86, 80, H - 170);
-      ctx.strokeStyle = '#25f07a'; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.strokeRect(30, 86, 80, H - 170); ctx.setLineDash([]);
-      for (const p of packs) { ctx.fillStyle = '#25f07a'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#061208'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', p.x, p.y); }
-      for (const s of shots) { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); ctx.fillRect(s.x - 30, s.y - 2, 26, 4); }
+      ctx.fillStyle = player.shield > 0 ? 'rgba(155,124,255,.22)' : 'rgba(37,240,122,.16)'; ctx.fillRect(30, 86, 80, H - 170);
+      ctx.strokeStyle = player.shield > 0 ? '#9b7cff' : '#25f07a'; ctx.lineWidth = 3; ctx.setLineDash([12, 8]); ctx.strokeRect(30, 86, 80, H - 170); ctx.setLineDash([]);
+      for (const p of packs) { ctx.fillStyle = packColor(p.type); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#061208'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(packLabel(p.type), p.x, p.y); }
+      for (const s of shots) { ctx.fillStyle = player.weapon === 'Rapid' ? '#66e8ff' : '#ffd166'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill(); ctx.fillRect(s.x - 30, s.y - 2, 26, 4); }
+      for (const m of missiles) { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(m.x + 14, m.y); ctx.lineTo(m.x - 10, m.y - 9); ctx.lineTo(m.x - 4, m.y); ctx.lineTo(m.x - 10, m.y + 9); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#ff5d73'; ctx.fillRect(m.x - 28, m.y - 3, 18, 6); }
       for (const e of enemies) drawDrone(e.x, e.y, e.r / 22, true);
+      if (boss) drawBoss(boss);
       for (const sp of sparks) { ctx.globalAlpha = Math.max(0, sp.life * 2); ctx.fillStyle = sp.color; ctx.beginPath(); ctx.arc(sp.x, sp.y, 4, 0, Math.PI*2); ctx.fill(); } ctx.globalAlpha = 1;
-      drawDrone(player.x, player.y, 1.08, false);
+      if (player.shield > 0) { ctx.strokeStyle = 'rgba(155,124,255,.72)'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(player.x, player.y, player.r + 18, 0, Math.PI*2); ctx.stroke(); }
+      drawDrone(player.x, player.y, 1.08, false, player.color);
       requestAnimationFrame(render);
     }
 
@@ -325,6 +533,8 @@
       btn.addEventListener('pointercancel', () => set(false));
       btn.addEventListener('pointerleave', () => set(false));
     });
+    document.querySelectorAll('.pilot').forEach(btn => btn.addEventListener('click', () => { selectedPilot = btn.dataset.pilot; document.querySelectorAll('.pilot').forEach(p => p.classList.toggle('active', p === btn)); beep(600, .05, 'triangle'); }));
+    soundBtn.addEventListener('click', async () => { soundEnabled = !soundEnabled; soundBtn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off'; if (soundEnabled) { beep(520, .08, 'triangle'); setTimeout(() => beep(760, .08, 'triangle'), 90); } });
     startBtn.addEventListener('click', reset);
     requestAnimationFrame(render);
     requestAnimationFrame(loop);
