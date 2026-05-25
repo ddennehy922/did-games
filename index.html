@@ -300,7 +300,7 @@
 
     .games {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 18px;
     }
 
@@ -442,6 +442,68 @@
       height: 12px;
       border-radius: 999px;
       background: #ffd166;
+    }
+
+    .thumb.drone {
+      background:
+        radial-gradient(circle at 76% 18%, rgba(255,209,102,.9) 0 7%, transparent 8%),
+        linear-gradient(180deg, #0f355f 0 58%, #17283f 59% 100%);
+    }
+    .cityline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 78px;
+      background: repeating-linear-gradient(90deg, #07111f 0 34px, #0d1c31 35px 58px, #07111f 59px 92px);
+      box-shadow: inset 0 26px 0 rgba(255,255,255,.035);
+    }
+    .drone-body {
+      position: absolute;
+      left: 50%;
+      top: 42%;
+      width: 104px;
+      height: 42px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #66e8ff, #25f07a);
+      box-shadow: 0 0 38px rgba(102,232,255,.45);
+    }
+    .drone-body::before,
+    .drone-body::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 82px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+    }
+    .drone-body::before { right: 74px; transform: translateY(-50%) rotate(-10deg); }
+    .drone-body::after { left: 74px; transform: translateY(-50%) rotate(10deg); }
+    .rotor,
+    .rotor::before,
+    .rotor::after {
+      position: absolute;
+      width: 58px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.84);
+      box-shadow: 0 0 16px rgba(255,255,255,.45);
+      content: "";
+    }
+    .rotor { left: 52px; top: 48px; }
+    .rotor::before { left: 192px; top: 4px; transform: rotate(10deg); }
+    .rotor::after { left: 92px; top: 64px; transform: rotate(-12deg); }
+    .bolt {
+      position: absolute;
+      right: 58px;
+      top: 64px;
+      width: 50px;
+      height: 70px;
+      background: #ffd166;
+      clip-path: polygon(42% 0, 100% 0, 62% 36%, 100% 36%, 25% 100%, 42% 54%, 0 54%);
+      filter: drop-shadow(0 0 18px rgba(255,209,102,.8));
     }
 
     .game-info {
@@ -610,7 +672,8 @@
           <h1 id="hero-title">DID Games <span class="gradient-text">Adventure Portal</span></h1>
           <p>Pick a game, jump in instantly, and help shape the next levels. Built for quick browser play, couch co-op experiments, and big kid-powered ideas — now with automatic Netlify updates from GitHub.</p>
           <div class="hero-actions">
-            <a class="pill primary" href="wardrobe-winter/">Start Wardrobe Winter</a>
+            <a class="pill primary" href="drone-defender/">Play Drone Defender</a>
+            <a class="pill" href="wardrobe-winter/">Start Wardrobe Winter</a>
             <a class="pill" href="stormfall/">Play Stormfall</a>
             <a class="pill" href="prince-castpeun/">Try Prince Castpeun</a>
           </div>
@@ -634,10 +697,20 @@
             <p class="eyebrow">Live games</p>
             <h2 id="games-title">Choose your quest</h2>
           </div>
-          <p>Three playable prototypes are live now. Each card links straight into the game folder on Netlify.</p>
+          <p>Four playable prototypes are live now. Each card links straight into the game folder on Netlify.</p>
         </div>
 
         <div class="games">
+          <a class="game-card" href="drone-defender/" aria-label="Play Drone Defender">
+            <div class="thumb drone"><span class="cityline"></span><span class="rotor"></span><span class="drone-body"></span><span class="bolt"></span></div>
+            <div class="game-info">
+              <div class="tag-row"><span class="tag">Drone Action</span><span class="tag">Arcade Shooter</span></div>
+              <h3>Drone Defender</h3>
+              <p>Fly patrol, shoot rogue drones, collect battery packs, and protect the city base through faster waves.</p>
+              <div class="play-line"><span>Play game</span><span>→</span></div>
+            </div>
+          </a>
+
           <a class="game-card" href="wardrobe-winter/" aria-label="Play Wardrobe Winter">
             <div class="thumb wardrobe"><span class="tree"></span><span class="wardrobe-door"></span></div>
             <div class="game-info">
