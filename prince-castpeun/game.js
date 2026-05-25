@@ -15,6 +15,7 @@ const dialogueText = document.getElementById("dialogue-text");
 
 const keys = new Set();
 const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2, down: false, moved: false };
+const touchInput = { active: false, moveKeys: new Set(), actionKeys: new Set() };
 const world = { width: 2200, height: 1700 };
 const localPlayerId = "local-lucy";
 
@@ -384,7 +385,9 @@ function showDialogue(speaker, text) {
 
 function update(dt) {
   const hero = activeHero();
-  const speed = keys.has("shift") ? 270 : 205;
+  const touchMoving = touchInput.moveKeys.size > 0;
+  const touchMode = touchInput.active || isCoarsePointer();
+  const speed = touchMode ? (keys.has("shift") ? 220 : 165) : (keys.has("shift") ? 270 : 205);
   let mx = 0;
   let my = 0;
   if (keys.has("w") || keys.has("arrowup")) my -= 1;
@@ -392,13 +395,29 @@ function update(dt) {
   if (keys.has("a") || keys.has("arrowleft")) mx -= 1;
   if (keys.has("d") || keys.has("arrowright")) mx += 1;
   const len = Math.hypot(mx, my) || 1;
-  hero.vx = (mx / len) * speed;
-  hero.vy = (my / len) * speed;
+  const targetVx = (mx / len) * speed;
+  const targetVy = (my / len) * speed;
+  if (touchMode) {
+    const ease = 1 - Math.exp(-dt * 12);
+    hero.vx += (targetVx - hero.vx) * ease;
+    hero.vy += (targetVy - hero.vy) * ease;
+    if (mx === 0 && my === 0 && Math.hypot(hero.vx, hero.vy) < 8) {
+      hero.vx = 0;
+      hero.vy = 0;
+    }
+  } else {
+    hero.vx = targetVx;
+    hero.vy = targetVy;
+  }
   hero.x = clamp(hero.x + hero.vx * dt, 70, world.width - 70);
   hero.y = clamp(hero.y + hero.vy * dt, 70, world.height - 70);
 
-  const aim = screenToWorld(mouse.x, mouse.y);
-  hero.angle = Math.atan2(aim.y - hero.y, aim.x - hero.x);
+  if (touchMoving && Math.hypot(hero.vx, hero.vy) > 12) {
+    hero.angle = Math.atan2(hero.vy, hero.vx);
+  } else if (mouse.moved || !touchMode) {
+    const aim = screenToWorld(mouse.x, mouse.y);
+    hero.angle = Math.atan2(aim.y - hero.y, aim.x - hero.x);
+  }
   if (hero.cooldown > 0) hero.cooldown -= dt;
   if (hero.healCooldown > 0) hero.healCooldown -= dt;
   if (hero.attackFlash > 0) hero.attackFlash -= dt;
@@ -1227,6 +1246,10 @@ function angleDelta(a, b) {
   return Math.atan2(Math.sin(a - b), Math.cos(a - b));
 }
 
+function isCoarsePointer() {
+  return window.matchMedia?.("(pointer: coarse)").matches || false;
+}
+
 window.addEventListener("resize", resize);
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
@@ -1252,17 +1275,23 @@ window.addEventListener("mouseup", () => {
 });
 document.querySelectorAll("#touch-controls button[data-key]").forEach((button) => {
   const key = button.dataset.key;
+  const isMoveKey = ["w", "a", "s", "d"].includes(key);
   const press = (event) => {
     event.preventDefault();
+    touchInput.active = true;
+    button.setPointerCapture?.(event.pointerId);
     if (key === "n" && levelComplete && storyBeatIndex < storyBeats.length - 1) {
       startLevel(storyBeatIndex + 1);
       return;
     }
     keys.add(key);
+    (isMoveKey ? touchInput.moveKeys : touchInput.actionKeys).add(key);
   };
   const release = (event) => {
     event.preventDefault();
     keys.delete(key);
+    touchInput.moveKeys.delete(key);
+    touchInput.actionKeys.delete(key);
   };
   button.addEventListener("pointerdown", press);
   button.addEventListener("pointerup", release);

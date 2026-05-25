@@ -14,6 +14,7 @@ body {
   min-height: 100vh;
   overflow: hidden;
   background: #102018;
+  touch-action: none;
 }
 
 .back-home {
@@ -242,13 +243,15 @@ body {
 
 #touch-controls {
   position: absolute;
-  inset: auto 14px 58px 14px;
+  inset: auto 18px 72px 18px;
   z-index: 20;
   display: none;
-  grid-template-columns: 132px 1fr;
-  gap: 14px;
+  grid-template-columns: 172px 1fr;
+  gap: 18px;
   align-items: end;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .touch-pad,
@@ -259,8 +262,8 @@ body {
 }
 
 .touch-pad {
-  grid-template-columns: repeat(3, 40px);
-  grid-template-rows: repeat(3, 40px);
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
 }
 
 .touch-actions {
@@ -271,13 +274,15 @@ body {
 
 #touch-controls button {
   margin: 0;
-  min-height: 40px;
+  min-height: 52px;
   border-radius: 999px;
   border-color: rgba(246, 244, 232, 0.34);
   background: rgba(19, 30, 28, 0.82);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(8px);
   touch-action: none;
+  color: #f6f4e8;
+  font-weight: 900;
 }
 
 .touch-actions button:first-child {
@@ -311,6 +316,7 @@ body {
 
 @media (max-width: 820px), (pointer: coarse) {
   #touch-controls { display: grid; }
+  #controls { display: none; }
 }
 
 @media (max-width: 520px) {
@@ -341,13 +347,18 @@ body {
   }
 
   #touch-controls {
-    inset: auto 8px 72px 8px;
-    grid-template-columns: 118px 1fr;
+    inset: auto 10px 24px 10px;
+    grid-template-columns: 142px 1fr;
+    gap: 10px;
   }
 
   .touch-pad {
-    grid-template-columns: repeat(3, 36px);
-    grid-template-rows: repeat(3, 36px);
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+  }
+
+  #touch-controls button {
+    min-height: 44px;
   }
 
   .touch-actions {
