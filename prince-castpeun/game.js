@@ -1254,6 +1254,10 @@ document.querySelectorAll("#touch-controls button[data-key]").forEach((button) =
   const key = button.dataset.key;
   const press = (event) => {
     event.preventDefault();
+    if (key === "n" && levelComplete && storyBeatIndex < storyBeats.length - 1) {
+      startLevel(storyBeatIndex + 1);
+      return;
+    }
     keys.add(key);
   };
   const release = (event) => {

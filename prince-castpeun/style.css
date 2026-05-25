@@ -265,8 +265,8 @@ body {
 
 .touch-actions {
   justify-self: end;
-  grid-template-columns: repeat(3, minmax(76px, 1fr));
-  max-width: 270px;
+  grid-template-columns: repeat(4, minmax(68px, 1fr));
+  max-width: 342px;
 }
 
 #touch-controls button {
