@@ -447,8 +447,18 @@
       if (boss) {
         if (dist(player, boss) < player.r + boss.r) { takeBaseDamage(28, boss.x, boss.y); boss.x += 80; }
         if (boss.x < 112) { takeBaseDamage(1.2 * dt * 60, 80, boss.y); }
-        for (let j = shots.length - 1; j >= 0; j--) if (dist(boss, shots[j]) < boss.r + shots[j].r) { shots.splice(j, 1); damageBoss(1); }
-        for (let j = missiles.length - 1; j >= 0; j--) if (boss && dist(boss, missiles[j]) < boss.r + missiles[j].r + 10) { missiles.splice(j, 1); damageBoss(5); }
+        for (let j = shots.length - 1; j >= 0 && boss; j--) {
+          if (dist(boss, shots[j]) < boss.r + shots[j].r) {
+            shots.splice(j, 1);
+            damageBoss(1);
+          }
+        }
+        for (let j = missiles.length - 1; j >= 0 && boss; j--) {
+          if (dist(boss, missiles[j]) < boss.r + missiles[j].r + 10) {
+            missiles.splice(j, 1);
+            damageBoss(5);
+          }
+        }
       }
       for (let i = packs.length - 1; i >= 0; i--) {
         const p = packs[i];
