@@ -14,6 +14,7 @@ const bossText = document.getElementById('bossText');
 const W = canvas.width;
 const H = canvas.height;
 const keys = { up:false, down:false, left:false, right:false, fire:false, dash:false };
+const touchMove = { active: false, x: 0, y: 0 };
 let last = 0;
 let running = false;
 let score = 0;
@@ -29,7 +30,7 @@ let messageTimer = 0;
 let boss = null;
 let bossWave = 0;
 
-const hero = { x: 140, y: H / 2, vx: 0, vy: 0, r: 18, speed: 230, facing: 0, dash: 0 };
+const hero = { x: 140, y: H / 2, vx: 0, vy: 0, r: 18, speed: 205, facing: 0, dash: 0 };
 const shots = [];
 const enemies = [];
 const gems = [];
@@ -129,13 +130,13 @@ function update(dt) {
   invuln = Math.max(0, invuln - dt);
   if (messageTimer > 0) { messageTimer -= dt; if (messageTimer <= 0) messageEl.style.display = 'none'; }
 
-  const mx = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-  const my = (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
+  const mx = touchMove.active ? touchMove.x : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  const my = touchMove.active ? touchMove.y : (keys.down ? 1 : 0) - (keys.up ? 1 : 0);
   const len = Math.hypot(mx, my) || 1;
   const targetSpeed = hero.speed * (hero.dash > 0 ? 2.45 : 1);
   const tx = (mx / len) * targetSpeed;
   const ty = (my / len) * targetSpeed;
-  const ease = 1 - Math.exp(-dt * 13);
+  const ease = 1 - Math.exp(-dt * (touchMove.active ? 8.5 : 11));
   hero.vx += (tx - hero.vx) * ease;
   hero.vy += (ty - hero.vy) * ease;
   if (mx || my) hero.facing = Math.atan2(my, mx);
@@ -224,7 +225,43 @@ function loop(t) { const dt = Math.min(.033, (t - last) / 1000 || 0); last = t; 
 const keyMap = { ArrowUp:'up', w:'up', W:'up', ArrowDown:'down', s:'down', S:'down', ArrowLeft:'left', a:'left', A:'left', ArrowRight:'right', d:'right', D:'right', ' ':'fire', Shift:'dash' };
 addEventListener('keydown', e => { const k = keyMap[e.key]; if (k) { e.preventDefault(); keys[k] = true; } });
 addEventListener('keyup', e => { const k = keyMap[e.key]; if (k) { e.preventDefault(); keys[k] = false; } });
-document.querySelectorAll('#touch-controls button[data-key]').forEach(button => {
+function clearTouchMove() {
+  touchMove.active = false;
+  touchMove.x = 0;
+  touchMove.y = 0;
+}
+
+const touchPad = document.querySelector('.touch-pad');
+function updateTouchMove(event) {
+  if (!touchPad) return;
+  event.preventDefault();
+  touchPad.setPointerCapture?.(event.pointerId);
+  const rect = touchPad.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = event.clientX - cx;
+  const dy = event.clientY - cy;
+  const radius = Math.max(1, Math.min(rect.width, rect.height) * .38);
+  const mag = Math.hypot(dx, dy);
+  const deadzone = radius * .18;
+  if (mag < deadzone) {
+    clearTouchMove();
+    return;
+  }
+  const strength = Math.min(1, (mag - deadzone) / (radius - deadzone));
+  touchMove.active = true;
+  touchMove.x = (dx / mag) * strength;
+  touchMove.y = (dy / mag) * strength;
+}
+if (touchPad) {
+  touchPad.addEventListener('pointerdown', updateTouchMove);
+  touchPad.addEventListener('pointermove', updateTouchMove);
+  touchPad.addEventListener('pointerup', event => { event.preventDefault(); clearTouchMove(); });
+  touchPad.addEventListener('pointercancel', event => { event.preventDefault(); clearTouchMove(); });
+  touchPad.addEventListener('lostpointercapture', clearTouchMove);
+}
+
+document.querySelectorAll('.touch-actions button[data-key]').forEach(button => {
   const key = button.dataset.key;
   const press = event => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); keys[key] = true; };
   const release = event => { event.preventDefault(); keys[key] = false; };

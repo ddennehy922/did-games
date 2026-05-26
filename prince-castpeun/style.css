@@ -135,6 +135,12 @@ h1 { margin:0; font-size: clamp(42px, 10vw, 82px); line-height:.9; letter-spacin
   font-weight: 1000;
   touch-action: none;
 }
+.touch-pad {
+  border-radius: 28px;
+  padding: 4px;
+  background: radial-gradient(circle at 50% 50%, rgba(30,215,96,.22), rgba(8,16,32,.28) 56%, rgba(8,16,32,.68));
+}
+.touch-pad button { background: rgba(8,16,32,.66); }
 .touch-actions button:first-child { min-height: 72px; background:#1ed760; color:#061006; }
 
 @media (max-width: 820px), (pointer: coarse) {
@@ -151,8 +157,8 @@ h1 { margin:0; font-size: clamp(42px, 10vw, 82px); line-height:.9; letter-spacin
 }
 
 @media (max-width: 480px) {
-  #touch-controls { grid-template-columns: 132px 1fr; gap: 8px; }
-  .touch-pad { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); }
+  #touch-controls { grid-template-columns: 144px 1fr; gap: 8px; }
+  .touch-pad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
   #touch-controls button { min-height: 40px; font-size: 12px; }
   .touch-actions { grid-template-columns: 74px; }
   .touch-actions button:first-child { min-height: 64px; }
