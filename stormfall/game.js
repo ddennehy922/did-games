@@ -1081,6 +1081,7 @@ document.querySelectorAll("#touchControls button[data-code]").forEach((button) =
   const code = button.dataset.code;
   const press = (event) => {
     event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
     keys.add(code);
     pressed.add(code);
   };

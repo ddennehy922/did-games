@@ -18,6 +18,7 @@
       background: #171d2b;
       color: #f7fbff;
       font-family: "Trebuchet MS", Arial, sans-serif;
+      touch-action: none;
     }
 
     .game-shell {
@@ -175,6 +176,8 @@
       align-items: end;
       transform: translateX(-50%);
       pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .touch-pad,
@@ -224,6 +227,25 @@
     @media (max-width: 780px), (pointer: coarse) {
       body { padding-bottom: 118px; }
       .touch-controls { display: grid; }
+      .controls { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      body { display: block; padding: 48px 0 118px; }
+      .back-home { top: 8px; left: 8px; padding: 8px 10px; opacity: .82; }
+      .game-shell { width: 100vw; grid-template-columns: 1fr; gap: 8px; }
+      .game-frame { border-width: 2px; }
+      canvas { aspect-ratio: 4 / 3; }
+      .panel { min-height: auto; margin: 0 8px; padding: 9px; border-width: 2px; }
+      .panel h1 { font-size: 18px; }
+      .status { grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; font-size: 12px; }
+      .quests { display: none; }
+      #restart { margin-top: 6px; padding: 8px 10px; }
+      .dialogue { left: 8px; right: 8px; bottom: 8px; min-height: 0; padding: 8px 10px; font-size: 12px; }
+      .touch-controls { bottom: calc(10px + env(safe-area-inset-bottom)); width: calc(100vw - 16px); grid-template-columns: 126px 1fr 96px; gap: 8px; }
+      .touch-pad { grid-template-columns: repeat(3, 38px); grid-template-rows: repeat(3, 38px); gap: 6px; }
+      .touch-btn { min-height: 38px; border-radius: 12px; font-size: 12px; }
+      .touch-btn.primary { min-height: 82px; font-size: 13px; }
     }
   </style>
 </head>
@@ -1498,6 +1520,7 @@
       const key = button.dataset.key;
       const press = (event) => {
         event.preventDefault();
+        button.setPointerCapture?.(event.pointerId);
         keys.add(key);
       };
       const release = (event) => {
@@ -1513,6 +1536,7 @@
     document.querySelectorAll(".touch-btn[data-interact]").forEach((button) => {
       button.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+        button.setPointerCapture?.(event.pointerId);
         interactPressed = true;
       });
     });

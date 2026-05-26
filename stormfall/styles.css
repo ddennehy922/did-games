@@ -19,6 +19,8 @@ body {
   background:
     radial-gradient(circle at 20% 15%, rgba(151, 189, 168, 0.18), transparent 28rem),
     linear-gradient(135deg, #121512, #25231d 48%, #161a1c);
+  touch-action: none;
+  user-select: none;
 }
 
 button {
@@ -148,6 +150,8 @@ h1 {
   gap: 1rem;
   align-items: end;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .touch-pad,
@@ -188,10 +192,12 @@ h1 {
 }
 
 @media (max-width: 540px) {
-  body { align-items: start; padding-top: 3.1rem; }
-  #shell { width: 100vw; }
-  .panel { padding: 1.25rem; }
-  .touch-controls { grid-template-columns: 8.2rem 1fr; inset: auto .55rem .55rem .55rem; }
-  .touch-pad { grid-template-columns: repeat(3, 2.35rem); grid-template-rows: repeat(3, 2.35rem); }
-  .touch-actions { grid-template-columns: 1fr; max-width: 5.4rem; }
+  body { align-items: start; padding-top: 2.7rem; }
+  #shell { width: 100vw; height: calc(100vh - 2.7rem); max-height: none; aspect-ratio: auto; }
+  .panel { padding: 1rem; max-height: calc(100vh - 5rem); overflow: auto; }
+  .touch-controls { grid-template-columns: 7.9rem 1fr; inset: auto .5rem calc(.5rem + env(safe-area-inset-bottom)) .5rem; gap: .55rem; }
+  .touch-pad { grid-template-columns: repeat(3, 2.28rem); grid-template-rows: repeat(3, 2.28rem); gap: .32rem; }
+  .touch-actions { grid-template-columns: repeat(2, minmax(4.1rem, 1fr)); max-width: 9rem; gap: .32rem; }
+  .touch-actions button:first-child { grid-column: 1 / -1; }
+  .touch-controls button { min-height: 2.28rem; padding: .42rem .5rem; font-size: .78rem; }
 }
