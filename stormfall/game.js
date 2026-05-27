@@ -74,6 +74,7 @@ const inputMaps = [
     craft: "Comma",
   },
 ];
+const gameCodes = new Set(inputMaps.flatMap((map) => Object.values(map)).concat(["Space"]));
 
 const state = {
   level: 1,
@@ -1068,15 +1069,21 @@ function loop(now) {
 }
 
 window.addEventListener("keydown", (event) => {
-  keys.add(event.code);
-  pressed.add(event.code);
-  const gameCodes = new Set(inputMaps.flatMap((map) => Object.values(map)).concat(["Space"]));
   if (gameCodes.has(event.code)) {
     event.preventDefault();
   }
+  keys.add(event.code);
+  if (!event.repeat) {
+    pressed.add(event.code);
+  }
 });
 
-window.addEventListener("keyup", (event) => keys.delete(event.code));
+window.addEventListener("keyup", (event) => {
+  if (gameCodes.has(event.code)) {
+    event.preventDefault();
+  }
+  keys.delete(event.code);
+});
 document.querySelectorAll("#touchControls button[data-code]").forEach((button) => {
   const code = button.dataset.code;
   const press = (event) => {
