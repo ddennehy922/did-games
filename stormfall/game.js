@@ -1086,6 +1086,7 @@ window.addEventListener("keyup", (event) => {
 });
 document.querySelectorAll("#touchControls button[data-code]").forEach((button) => {
   const code = button.dataset.code;
+  const blockBrowserGesture = (event) => event.preventDefault();
   const press = (event) => {
     event.preventDefault();
     button.setPointerCapture?.(event.pointerId);
@@ -1096,10 +1097,15 @@ document.querySelectorAll("#touchControls button[data-code]").forEach((button) =
     event.preventDefault();
     keys.delete(code);
   };
+  button.addEventListener("contextmenu", blockBrowserGesture);
+  button.addEventListener("selectstart", blockBrowserGesture);
+  button.addEventListener("touchstart", blockBrowserGesture, { passive: false });
+  button.addEventListener("touchend", blockBrowserGesture, { passive: false });
   button.addEventListener("pointerdown", press);
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
   button.addEventListener("pointerleave", release);
+  button.addEventListener("lostpointercapture", release);
 });
 startButton.addEventListener("click", startGame);
 helpButton.addEventListener("click", () => help.classList.toggle("visible"));

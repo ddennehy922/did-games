@@ -21,6 +21,8 @@ body {
     linear-gradient(135deg, #121512, #25231d 48%, #161a1c);
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 button {
@@ -32,6 +34,7 @@ button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:hover,
@@ -152,6 +155,7 @@ h1 {
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .touch-pad,
@@ -173,12 +177,17 @@ h1 {
 }
 
 .touch-controls button {
-  min-height: 2.6rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border-radius: 999px;
   background: rgba(15, 20, 16, 0.78);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(10px);
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .touch-actions button:nth-child(2) {
@@ -195,9 +204,9 @@ h1 {
   body { align-items: start; padding-top: 2.7rem; }
   #shell { width: 100vw; height: calc(100vh - 2.7rem); max-height: none; aspect-ratio: auto; }
   .panel { padding: 1rem; max-height: calc(100vh - 5rem); overflow: auto; }
-  .touch-controls { grid-template-columns: 7.9rem 1fr; inset: auto .5rem calc(.5rem + env(safe-area-inset-bottom)) .5rem; gap: .55rem; }
-  .touch-pad { grid-template-columns: repeat(3, 2.28rem); grid-template-rows: repeat(3, 2.28rem); gap: .32rem; }
-  .touch-actions { grid-template-columns: repeat(2, minmax(4.1rem, 1fr)); max-width: 9rem; gap: .32rem; }
+  .touch-controls { grid-template-columns: 9rem 1fr; inset: auto .5rem calc(.5rem + env(safe-area-inset-bottom)) .5rem; gap: .45rem; }
+  .touch-pad { grid-template-columns: repeat(3, 2.75rem); grid-template-rows: repeat(3, 2.75rem); gap: .28rem; }
+  .touch-actions { grid-template-columns: repeat(2, minmax(4.35rem, 1fr)); max-width: 9.1rem; gap: .28rem; }
   .touch-actions button:first-child { grid-column: 1 / -1; }
-  .touch-controls button { min-height: 2.28rem; padding: .42rem .5rem; font-size: .78rem; }
+  .touch-controls button { min-height: 2.75rem; padding: .42rem .5rem; font-size: .78rem; }
 }
