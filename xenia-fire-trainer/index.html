@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Xenia Fire Trainer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Street learning simulator</p>
+        <h1>Xenia Fire Trainer</h1>
+      </div>
+      <div class="top-actions">
+        <button class="ghost" id="menuBtn">Menu</button>
+        <button class="ghost" id="zoomBtn">View: Close</button>
+        <div class="status-pill" id="modePill">Free Drive</div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="map-panel">
+        <canvas id="game" width="1280" height="820" aria-label="Xenia emergency vehicle driving trainer"></canvas>
+        <div class="drive-hud" aria-label="Driving status">
+          <span id="hudSpeed">0 mph</span>
+          <span id="hudDistance">Distance —</span>
+          <span id="hudGps">GPS On</span>
+        </div>
+        <button class="minimap-toggle" id="minimapToggle" aria-label="Show or hide minimap">Map</button>
+        <canvas id="minimap" width="230" height="170" aria-label="Training minimap"></canvas>
+        <div class="toast" id="toast" role="status">Ready for training</div>
+        <div class="touch-controls" aria-hidden="false">
+          <div class="dpad">
+            <button data-key="ArrowUp">▲</button>
+            <button data-key="ArrowLeft">◀</button>
+            <button data-key="ArrowDown">▼</button>
+            <button data-key="ArrowRight">▶</button>
+          </div>
+          <div class="actions">
+            <button data-key="Space" class="brake-button">Brake</button>
+            <button id="touchDispatch">Dispatch</button>
+            <button id="touchGps">GPS</button>
+            <button id="touchZoom">View</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <section class="card dispatch-card">
+          <p class="label">Current Dispatch</p>
+          <h2 id="dispatchTitle">No active call</h2>
+          <p id="dispatchText">Pick a mode, choose a station, then start a dispatch run.</p>
+          <div class="call-meta">
+            <span id="distanceText">Distance: —</span>
+            <span id="timerText">Timer: 00:00</span>
+            <span id="gpsText">GPS: On</span>
+            <span id="bestText">Best: —</span>
+          </div>
+          <div class="button-row">
+            <button id="newCallBtn">New Dispatch</button>
+            <button class="ghost" id="gpsBtn">Toggle GPS</button>
+          </div>
+        </section>
+
+        <section class="card mode-card">
+          <p class="label">Training Mode</p>
+          <div class="mode-buttons">
+            <button data-mode="guided">Guided Dispatch</button>
+            <button data-mode="memory">Street Memory</button>
+            <button data-mode="free">Free Drive</button>
+          </div>
+          <p id="modeDescription">Guided Dispatch starts with GPS on so you can learn the route.</p>
+        </section>
+
+        <section class="card vehicle-card">
+          <p class="label">Apparatus</p>
+          <div class="vehicle-buttons">
+            <button data-vehicle="ambulance">Ambulance</button>
+            <button data-vehicle="engine">Fire Engine</button>
+          </div>
+          <p id="vehicleDescription">Choose Ambulance for faster EMS response or Fire Engine for heavier apparatus training.</p>
+        </section>
+
+        <section class="card">
+          <p class="label">Start Station</p>
+          <div id="stationButtons" class="station-buttons"></div>
+        </section>
+
+        <section class="card stats">
+          <p class="label">Training Score</p>
+          <div><strong id="scoreText">0</strong><span> points</span></div>
+          <div><strong id="runsText">0</strong><span> completed runs</span></div>
+          <div><strong id="speedText">0</strong><span> mph estimated</span></div>
+          <div><strong id="gradeText">Ready</strong><span> last grade</span></div>
+        </section>
+
+        <section class="card help">
+          <p class="label">Controls</p>
+          <ul>
+            <li>WASD / Arrow keys: drive</li>
+            <li>Space: brake</li>
+            <li>N: new dispatch</li>
+            <li>G: toggle GPS guide</li>
+            <li>V: cycle Close / Wide / City map view</li>
+            <li>R: reset to selected station</li>
+          </ul>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="overlay" id="startOverlay">
+    <div class="start-card">
+      <p class="eyebrow">Prototype rebuild</p>
+      <h2>Train Xenia street response routes</h2>
+      <p>This version focuses on the core loop: choose an ambulance or engine, start from Station 31 or 32, receive a dispatch, drive real Xenia streets, and build route memory.</p>
+      <div class="start-grid">
+        <button data-start-mode="guided">Guided Dispatch<br><small>GPS on, best for learning</small></button>
+        <button data-start-mode="memory">Street Memory<br><small>GPS off, test yourself</small></button>
+        <button data-start-mode="free">Free Drive<br><small>Explore the map</small></button>
+      </div>
+      <button class="ghost full" id="closeOverlayBtn">Continue with current setup</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
