@@ -1084,6 +1084,14 @@ window.addEventListener("keyup", (event) => {
   }
   keys.delete(event.code);
 });
+
+window.addEventListener("blur", () => {
+  keys.clear();
+  document.querySelectorAll("#touchControls .is-pressed").forEach((button) => {
+    button.classList.remove("is-pressed");
+  });
+});
+
 document.querySelectorAll("#touchControls button[data-code]").forEach((button) => {
   const code = button.dataset.code;
   let activePointerId = null;
@@ -1099,7 +1107,8 @@ document.querySelectorAll("#touchControls button[data-code]").forEach((button) =
   };
   const release = (event) => {
     event.preventDefault();
-    if (activePointerId !== null && event.pointerId !== activePointerId) return;
+    const pointerId = event.pointerId ?? activePointerId;
+    if (activePointerId !== null && pointerId !== activePointerId) return;
     activePointerId = null;
     button.classList.remove("is-pressed");
     keys.delete(code);
