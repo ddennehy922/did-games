@@ -57,6 +57,28 @@
 
     a { color: inherit; }
 
+    .skip-link {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 99;
+      transform: translateY(-140%);
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: var(--gold);
+      color: #171109;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: rgba(0,0,0,.35) 0 10px 28px;
+      transition: transform .18s ease;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 3px solid rgba(255,255,255,.72);
+      outline-offset: 3px;
+    }
+
     .page {
       position: relative;
       width: min(1180px, calc(100% - 32px));
@@ -718,6 +740,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#games">Skip to live games</a>
   <div class="page">
     <header class="topbar" aria-label="DID Games navigation">
       <a class="logo" href="./" aria-label="DID Games home">
