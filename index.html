@@ -581,6 +581,57 @@
       filter: drop-shadow(0 0 18px rgba(255,209,102,.8));
     }
 
+
+    .thumb.skyline {
+      background:
+        radial-gradient(circle at 76% 18%, rgba(255,209,102,.9) 0 7%, transparent 8%),
+        linear-gradient(180deg, #071026 0 54%, #102a4c 55% 100%);
+    }
+    .rally-road {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(105deg, transparent 0 31%, rgba(103,232,249,.42) 32% 34%, transparent 35% 65%, rgba(103,232,249,.38) 66% 68%, transparent 69%),
+        repeating-linear-gradient(180deg, transparent 0 28px, rgba(255,255,255,.16) 29px 32px);
+      opacity: .76;
+      transform: perspective(180px) rotateX(28deg) translateY(42px) scale(1.15);
+    }
+    .rally-gate {
+      position: absolute;
+      left: 50%;
+      top: 42px;
+      width: 168px;
+      height: 92px;
+      transform: translateX(-50%);
+      border: 10px solid #ff5fd7;
+      border-bottom: 0;
+      border-radius: 34px 34px 0 0;
+      box-shadow: 0 0 34px rgba(255,95,215,.72);
+    }
+    .rally-drone {
+      position: absolute;
+      left: 50%;
+      bottom: 62px;
+      width: 88px;
+      height: 36px;
+      transform: translateX(-50%) rotate(-8deg);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #67e8f9, #39ff88);
+      box-shadow: 0 0 38px rgba(103,232,249,.62);
+    }
+    .rally-drone::before,
+    .rally-drone::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 70px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.82);
+    }
+    .rally-drone::before { right: 66px; transform: translateY(-50%) rotate(12deg); }
+    .rally-drone::after { left: 66px; transform: translateY(-50%) rotate(-12deg); }
+
     .game-info {
       display: grid;
       gap: 14px;
@@ -765,6 +816,7 @@
             <a class="pill primary" href="drone-defender/">Play Drone Defender</a>
             <a class="pill" href="wardrobe-winter/">Start Wardrobe Winter</a>
             <a class="pill" href="stormfall/">Play Stormfall</a>
+            <a class="pill" href="skyline-drone-rally/">Fly Drone Rally</a>
             <a class="pill" href="prince-castpeun/">Try Crown Quest</a>
           </div>
         </div>
@@ -787,7 +839,7 @@
             <p class="eyebrow">Live games</p>
             <h2 id="games-title">Choose your quest</h2>
           </div>
-          <p>Five playable prototypes are live now. Each card links straight into the game folder on Netlify.</p>
+          <p>Six playable prototypes are live now. Each card links straight into the game folder on Netlify.</p>
         </div>
 
         <div class="games">
@@ -831,6 +883,19 @@
               <h3>Crown Quest</h3>
               <p>Dash through an original kingdom arcade game, collect gems, blast shadows, and beat Gate Guardian bosses.</p>
               <span class="control-note">Mobile-first buttons and desktop keys</span>
+              <div class="play-line"><span>Play game</span><span>→</span></div>
+            </div>
+          </a>
+
+
+
+          <a class="game-card" href="skyline-drone-rally/" aria-label="Play Skyline Drone Rally">
+            <div class="thumb skyline"><span class="rally-road"></span><span class="rally-gate"></span><span class="rally-drone"></span></div>
+            <div class="game-info">
+              <div class="tag-row"><span class="tag">Drone Racing</span><span class="tag">High Score</span></div>
+              <h3>Skyline Drone Rally</h3>
+              <p>Thread neon city gates, collect batteries, dodge tower hazards, and build combos before energy runs out.</p>
+              <span class="control-note">Drag/touch steering plus WASD/arrow keys</span>
               <div class="play-line"><span>Play game</span><span>→</span></div>
             </div>
           </a>
