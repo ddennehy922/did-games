@@ -11,6 +11,23 @@ const bossBar = document.getElementById('bossBar');
 const bossMeter = document.getElementById('bossMeter');
 const bossText = document.getElementById('bossText');
 
+const storage = {
+  get(key, fallback = '0') {
+    try {
+      return localStorage.getItem(key) || fallback;
+    } catch (error) {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (error) {
+      // Keep playing if browser privacy settings block saved scores.
+    }
+  }
+};
+
 const W = canvas.width;
 const H = canvas.height;
 const keys = { up:false, down:false, left:false, right:false, fire:false, dash:false };
@@ -18,7 +35,7 @@ const touchMove = { active: false, x: 0, y: 0 };
 let last = 0;
 let running = false;
 let score = 0;
-let high = Number(localStorage.getItem('crownQuestHigh') || 0);
+let high = Number(storage.get('crownQuestHigh'));
 let wave = 1;
 let hearts = 3;
 let spawnTimer = 0;
@@ -115,9 +132,10 @@ function damageBoss(amount) {
 }
 function endGame() {
   running = false;
-  if (score > high) { high = score; localStorage.setItem('crownQuestHigh', String(high)); }
+  const newRecord = score > high;
+  if (newRecord) { high = score; storage.set('crownQuestHigh', String(high)); }
   overlay.classList.remove('hidden');
-  overlay.querySelector('.start-card').innerHTML = `<p class="kicker">Crown Quest</p><h1>${score >= high && score > 0 ? 'New Record!' : 'Quest Over'}</h1><p>You scored <b>${score}</b> and reached wave <b>${wave}</b>. High score: <b>${high}</b>.</p><button id="restartBtn" type="button">Play Again</button><p class="hint">Tip: Dash makes you briefly safe.</p>`;
+  overlay.querySelector('.start-card').innerHTML = `<p class="kicker">Crown Quest</p><h1>${newRecord ? 'New Record!' : 'Quest Over'}</h1><p>You scored <b>${score}</b> and reached wave <b>${wave}</b>. High score: <b>${high}</b>.</p><button id="restartBtn" type="button">Play Again</button><p class="hint">Tip: Dash makes you briefly safe.</p>`;
   document.getElementById('restartBtn').addEventListener('click', reset);
   updateHud();
 }
@@ -188,7 +206,7 @@ function update(dt) {
   }
   for (let i = shots.length - 1; i >= 0; i--) if (shots[i].x > W + 30 || shots[i].life <= 0) shots.splice(i, 1);
   for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-  if (score > high) { high = score; localStorage.setItem('crownQuestHigh', String(high)); }
+  if (score > high) { high = score; storage.set('crownQuestHigh', String(high)); }
   updateHud();
 }
 
