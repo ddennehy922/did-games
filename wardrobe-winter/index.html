@@ -94,6 +94,13 @@
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .badge.highlight {
+      border-color: rgba(255, 209, 102, 0.74);
+      background: rgba(255, 209, 102, 0.16);
+      color: #fff4c5;
+      font-weight: 800;
+    }
+
     .quests {
       margin: 0;
       padding: 0;
@@ -262,13 +269,16 @@
       <div class="status">
         <div id="worldStatus" class="badge">World: Mansion</div>
         <div id="hintStatus" class="badge">Move to the wardrobe and press Space.</div>
+        <div id="timerStatus" class="badge highlight">Run: 0:00</div>
+        <div id="bestStatus" class="badge highlight">Best: --</div>
       </div>
       <ul id="questList" class="quests"></ul>
       <div class="controls">
         <strong>Controls</strong><br />
         Move: WASD or Arrow Keys<br />
         Talk / Interact: Space or Enter<br />
-        Goal: Follow the golden quest marker.
+        Goal: Follow the golden quest marker.<br />
+        Replay: finish faster to set a saved best time.
       </div>
       <button id="restart">Restart Adventure</button>
     </aside>
@@ -300,6 +310,8 @@
     const questList = document.getElementById("questList");
     const worldStatus = document.getElementById("worldStatus");
     const hintStatus = document.getElementById("hintStatus");
+    const timerStatus = document.getElementById("timerStatus");
+    const bestStatus = document.getElementById("bestStatus");
     const restartButton = document.getElementById("restart");
 
     /* Core map constants. */
@@ -308,6 +320,7 @@
     const VIEW_HEIGHT = canvas.height;
     const WORLD_WIDTH = 1900;
     const WORLD_HEIGHT = 1400;
+    const BEST_TIME_KEY = "wardrobeWinterBestSeconds";
 
     /* Keyboard state for smooth movement and interactions. */
     const keys = new Set();
@@ -338,6 +351,9 @@
       frostLevel: 0,
       frostChallengeActive: false,
       frostChallengeTimer: 0,
+      runFrames: 0,
+      runComplete: false,
+      bestSeconds: loadBestTime(),
       messageTimer: 0,
       currentMessage: null,
       camera: { x: 0, y: 0 },
@@ -587,6 +603,42 @@
       return [...mansionObjects, ...winterObjects, ...mazeWalls, ...scenery, ...trees].find((object) => object.id === id);
     }
 
+    function loadBestTime() {
+      try {
+        const saved = Number(localStorage.getItem(BEST_TIME_KEY));
+        return Number.isFinite(saved) && saved > 0 ? saved : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function saveBestTime(seconds) {
+      state.bestSeconds = seconds;
+      try {
+        localStorage.setItem(BEST_TIME_KEY, String(seconds));
+      } catch (error) {
+        // Private browsing or locked-down storage should not block the adventure.
+      }
+    }
+
+    function formatRunTime(seconds) {
+      if (!Number.isFinite(seconds) || seconds <= 0) return "--";
+      const minutes = Math.floor(seconds / 60);
+      const remaining = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return `${minutes}:${remaining}`;
+    }
+
+    function finishRunIfNeeded() {
+      if (state.runComplete) return null;
+      state.runComplete = true;
+      const finalSeconds = Math.max(1, Math.floor(state.runFrames / 60));
+      if (!state.bestSeconds || finalSeconds < state.bestSeconds) {
+        saveBestTime(finalSeconds);
+        return `Spring returned in ${formatRunTime(finalSeconds)} — new saved best time! Try another run and beat it again.`;
+      }
+      return `Spring returned in ${formatRunTime(finalSeconds)}. Saved best: ${formatRunTime(state.bestSeconds)}.`;
+    }
+
     function worldBounds() {
       return state.scene === "mansion"
         ? { width: VIEW_WIDTH, height: VIEW_HEIGHT }
@@ -616,9 +668,16 @@
     function completeQuest(index, message) {
       if (state.quest === index) {
         state.quest += 1;
-        showMessage("Quest Complete", message, 220);
+        const runMessage = state.quest >= quests.length ? finishRunIfNeeded() : null;
+        showMessage(state.quest >= quests.length ? "Adventure Complete" : "Quest Complete", runMessage || message, state.quest >= quests.length ? 360 : 220);
         renderQuestList();
       }
+    }
+
+    function renderRunStats() {
+      const currentSeconds = Math.floor(state.runFrames / 60);
+      timerStatus.textContent = `Run: ${formatRunTime(currentSeconds)}`;
+      bestStatus.textContent = `Best: ${formatRunTime(state.bestSeconds)}`;
     }
 
     function renderQuestList() {
@@ -632,6 +691,7 @@
       });
       worldStatus.textContent = `World: ${state.scene === "mansion" ? "Mansion" : state.season === "spring" ? "Spring Realm" : "Winter Realm"}`;
       hintStatus.textContent = `${getHint()} ${getFrostStatus()}`;
+      renderRunStats();
     }
 
     function getHint() {
@@ -748,9 +808,8 @@
 
         if (nearbyObject.id === "stoneTable" && state.quest === 8) {
           state.season = "spring";
-          completeQuest(8, "Winter melted into spring. Luma, Sora, Peregrin, and Eamon were crowned as gentle rulers.");
+          completeQuest(8, "Winter melted into spring. Snowdrops bloomed, rivers sang, and every stone statue woke smiling.");
           renderQuestList();
-          showMessage("Spring Returns", "Snowdrops bloomed, rivers sang, and every stone statue woke smiling.", 320);
           return;
         }
 
@@ -807,6 +866,8 @@
     }
 
     function updatePlayer() {
+      if (!state.runComplete) state.runFrames += 1;
+
       let dx = 0;
       let dy = 0;
       if (keys.has("arrowleft") || keys.has("a")) dx -= 1;
@@ -840,6 +901,8 @@
         state.messageTimer -= 1;
         if (state.messageTimer === 0) hideMessage();
       }
+
+      if (state.runFrames % 30 === 0 || state.runComplete) renderRunStats();
     }
 
     function updateFrostChallenge() {
@@ -1471,7 +1534,7 @@
       ctx.font = "24px Trebuchet MS";
       ctx.fillText("Spring has returned!", 270, 262);
       ctx.font = "16px Trebuchet MS";
-      ctx.fillText("The four children are crowned as kind rulers.", 220, 292);
+      ctx.fillText(`Best spring run: ${formatRunTime(state.bestSeconds)}`, 250, 292);
     }
 
     /* Main render pass draws the current scene, characters, marker, and ending state. */
@@ -1553,6 +1616,8 @@
       state.frostLevel = 0;
       state.frostChallengeActive = false;
       state.frostChallengeTimer = 0;
+      state.runFrames = 0;
+      state.runComplete = false;
       state.player.x = 350;
       state.player.y = 395;
       state.player.safeX = 350;
