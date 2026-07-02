@@ -247,6 +247,7 @@ function clearTouchMove() {
   touchMove.active = false;
   touchMove.x = 0;
   touchMove.y = 0;
+  touchPad?.classList.remove('is-active');
 }
 
 const touchPad = document.querySelector('.touch-pad');
@@ -268,6 +269,7 @@ function updateTouchMove(event) {
   }
   const strength = Math.min(1, (mag - deadzone) / (radius - deadzone));
   touchMove.active = true;
+  touchPad.classList.add('is-active');
   touchMove.x = (dx / mag) * strength;
   touchMove.y = (dy / mag) * strength;
 }
@@ -281,12 +283,30 @@ if (touchPad) {
 
 document.querySelectorAll('.touch-actions button[data-key]').forEach(button => {
   const key = button.dataset.key;
-  const press = event => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); keys[key] = true; };
-  const release = event => { event.preventDefault(); keys[key] = false; };
+  const press = event => {
+    event.preventDefault();
+    button.setPointerCapture?.(event.pointerId);
+    button.classList.add('is-pressed');
+    keys[key] = true;
+  };
+  const release = event => {
+    event.preventDefault();
+    button.classList.remove('is-pressed');
+    keys[key] = false;
+  };
   button.addEventListener('pointerdown', press);
   button.addEventListener('pointerup', release);
   button.addEventListener('pointercancel', release);
+  button.addEventListener('lostpointercapture', release);
   button.addEventListener('pointerleave', release);
+});
+
+addEventListener('blur', () => {
+  clearTouchMove();
+  document.querySelectorAll('.touch-actions button[data-key]').forEach(button => {
+    button.classList.remove('is-pressed');
+    keys[button.dataset.key] = false;
+  });
 });
 startBtn.addEventListener('click', reset);
 requestAnimationFrame(render);
