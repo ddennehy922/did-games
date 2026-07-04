@@ -32,18 +32,18 @@
         <button class="minimap-toggle" id="minimapToggle" aria-label="Show or hide minimap">Map</button>
         <canvas id="minimap" width="230" height="170" aria-label="Training minimap"></canvas>
         <div class="toast" id="toast" role="status">Ready for training</div>
-        <div class="touch-controls" aria-hidden="false">
-          <div class="dpad">
-            <button data-key="ArrowUp">▲</button>
-            <button data-key="ArrowLeft">◀</button>
-            <button data-key="ArrowDown">▼</button>
-            <button data-key="ArrowRight">▶</button>
+        <div class="touch-controls" aria-label="Touch driving controls" aria-hidden="false">
+          <div class="dpad" aria-label="Steering and throttle">
+            <button data-key="ArrowUp" type="button" aria-label="Accelerate">▲</button>
+            <button data-key="ArrowLeft" type="button" aria-label="Steer left">◀</button>
+            <button data-key="ArrowDown" type="button" aria-label="Reverse">▼</button>
+            <button data-key="ArrowRight" type="button" aria-label="Steer right">▶</button>
           </div>
           <div class="actions">
-            <button data-key="Space" class="brake-button">Brake</button>
-            <button id="touchDispatch">Dispatch</button>
-            <button id="touchGps">GPS</button>
-            <button id="touchZoom">View</button>
+            <button data-key="Space" class="brake-button" type="button" aria-label="Brake">Brake</button>
+            <button id="touchDispatch" type="button">Dispatch</button>
+            <button id="touchGps" type="button">GPS</button>
+            <button id="touchZoom" type="button">View</button>
           </div>
         </div>
       </section>

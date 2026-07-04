@@ -669,7 +669,7 @@ window.addEventListener('keyup', e => keys.delete(e.code));
 document.querySelectorAll('[data-key]').forEach(btn => {
   const code = btn.dataset.key;
   btn.setAttribute('unselectable', 'on');
-  btn.setAttribute('aria-label', `Touch control ${code}`);
+  if (!btn.hasAttribute('aria-label')) btn.setAttribute('aria-label', `Touch control ${code}`);
   btn.addEventListener('contextmenu', e => e.preventDefault());
   const down = e => {
     e.preventDefault();

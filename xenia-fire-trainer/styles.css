@@ -45,7 +45,7 @@ button.full { width:100%; margin-top:12px; }
 .stats { display:grid; gap:8px; }
 .stats strong { font-size:1.5rem; margin-right:6px; }
 ul { margin:0; padding-left:18px; color:var(--muted); line-height:1.6; }
-.touch-controls { display:none; position:absolute; inset:auto 18px 24px 18px; justify-content:space-between; align-items:flex-end; pointer-events:none; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.touch-controls { display:none; position:absolute; inset:auto 18px max(24px, calc(env(safe-area-inset-bottom, 0px) + 12px)) 18px; justify-content:space-between; align-items:flex-end; pointer-events:none; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 .touch-controls button { pointer-events:auto; min-width:68px; min-height:62px; background:rgba(241,247,255,.90); color:#0b1522; border:1px solid rgba(255,255,255,.7); touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; font-size:1.05rem; }
 .dpad { display:grid; grid-template-columns:68px 68px 68px; grid-template-rows:62px 62px; gap:8px; align-items:center; }
 .dpad button:first-child { grid-column:2; }
