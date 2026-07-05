@@ -626,7 +626,8 @@ function setupUI() {
   document.getElementById('touchZoom').onclick = toggleViewMode;
   document.getElementById('menuBtn').onclick = () => ui.overlay.classList.remove('hidden');
   document.getElementById('minimapToggle').onclick = () => {
-    document.querySelector('.map-panel').classList.toggle('minimap-collapsed');
+    const collapsed = document.querySelector('.map-panel').classList.toggle('minimap-collapsed');
+    updateMinimapToggle(!collapsed);
   };
   document.getElementById('closeOverlayBtn').onclick = () => ui.overlay.classList.add('hidden');
   document.querySelectorAll('[data-mode]').forEach(btn => btn.onclick = () => setMode(btn.dataset.mode));
@@ -637,8 +638,23 @@ function setupUI() {
     if (btn.dataset.startMode !== 'free') newDispatch();
   });
   ui.bestText.textContent = `Best: ${fmt(bestRun)}`;
+  updateViewButtons();
+  updateMinimapToggle(true);
   setVehicle('ambulance');
   setMode('guided');
+}
+
+function updateViewButtons() {
+  const label = VIEW_MODES[viewMode].label;
+  document.getElementById('zoomBtn').textContent = `View: ${label}`;
+  document.getElementById('touchZoom').textContent = `View: ${label}`;
+}
+
+function updateMinimapToggle(visible) {
+  const btn = document.getElementById('minimapToggle');
+  btn.textContent = visible ? 'Hide Map' : 'Show Map';
+  btn.setAttribute('aria-label', visible ? 'Hide minimap' : 'Show minimap');
+  btn.setAttribute('aria-pressed', String(visible));
 }
 
 function toggleGps() {
@@ -651,7 +667,7 @@ function toggleViewMode() {
   const order = ['close', 'wide', 'city'];
   viewMode = order[(order.indexOf(viewMode) + 1) % order.length];
   const label = VIEW_MODES[viewMode].label;
-  document.getElementById('zoomBtn').textContent = `View: ${label}`;
+  updateViewButtons();
   showToast(`Map view: ${label}`);
 }
 
