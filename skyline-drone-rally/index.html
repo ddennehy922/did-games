@@ -85,7 +85,7 @@
       top: 12px;
       z-index: 5;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 7px;
       pointer-events: none;
     }
@@ -101,7 +101,7 @@
 
     .stat { padding: 7px 6px; text-align: center; }
     .stat small { display: block; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
-    .stat b { display: block; margin-top: 2px; font-size: clamp(14px, 3.2vw, 20px); }
+    .stat b { display: block; margin-top: 2px; font-size: clamp(13px, 3vw, 20px); }
 
     .overlay {
       position: absolute;
@@ -210,19 +210,20 @@
         <div class="stat"><small>Best</small><b id="best">0</b></div>
         <div class="stat"><small>Combo</small><b id="combo">1x</b></div>
         <div class="stat"><small>Energy</small><b id="energy">100%</b></div>
+        <div class="stat"><small>Shield</small><b id="shield">0</b></div>
       </section>
       <div class="toast panel" id="toast">Battery +20</div>
       <section class="touch-zone" aria-hidden="true">
         <div class="drag-hint panel">Drag anywhere to steer</div>
-        <div class="boost-chip panel">Thread gates • Grab batteries</div>
+        <div class="boost-chip panel">Thread gates • Shield saves streaks</div>
       </section>
       <section class="overlay" id="overlay">
         <div class="card panel">
           <p class="kicker">DID Games • Drone Arcade</p>
           <h1>Skyline Drone Rally</h1>
-          <p>Fly a courier drone through neon city gates, collect batteries, dodge signal towers and blimps, then build combos before your energy runs out.</p>
+          <p>Fly a courier drone through neon city gates, collect batteries, dodge signal towers and blimps, then grab shield orbs to save a hot streak before your energy runs out.</p>
           <button id="startBtn" type="button">Start Rally</button>
-          <div class="hint">Phone: drag to steer. Desktop: WASD/arrow keys. Fly through the glowing gate opening for combos.</div>
+          <div class="hint">Phone: drag to steer. Desktop: WASD/arrow keys. Fly through gates for combos; blue shield orbs absorb one crash.</div>
         </div>
       </section>
     </main>
@@ -235,6 +236,7 @@
     const bestEl = document.getElementById('best');
     const comboEl = document.getElementById('combo');
     const energyEl = document.getElementById('energy');
+    const shieldEl = document.getElementById('shield');
     const overlay = document.getElementById('overlay');
     const startBtn = document.getElementById('startBtn');
     const toast = document.getElementById('toast');
@@ -258,14 +260,17 @@
     const drone = { x: W / 2, y: H * .72, r: 34, vx: 0 };
     let gates = [];
     let batteries = [];
+    let shields = [];
     let hazards = [];
     let particles = [];
     let score = 0;
     let combo = 1;
     let energy = 100;
+    let shield = 0;
     let speed = 285;
     let nextGate = 0;
     let nextBattery = 1.2;
+    let nextShield = 6.5;
     let nextHazard = 1.8;
 
     bestEl.textContent = best;
@@ -280,14 +285,17 @@
       targetX = drone.x;
       gates = [];
       batteries = [];
+      shields = [];
       hazards = [];
       particles = [];
       score = 0;
       combo = 1;
       energy = 100;
+      shield = 0;
       speed = 285;
       nextGate = 0;
       nextBattery = .75;
+      nextShield = 5.2;
       nextHazard = 1.55;
       showToast('Rally started!');
       updateHud();
@@ -301,6 +309,10 @@
 
     function spawnBattery() {
       batteries.push({ x: rand(90, W - 90), y: -80, r: 26, pulse: rand(0, Math.PI * 2) });
+    }
+
+    function spawnShield() {
+      shields.push({ x: rand(110, W - 110), y: -90, r: 28, pulse: rand(0, Math.PI * 2) });
     }
 
     function spawnHazard() {
@@ -325,6 +337,7 @@
       bestEl.textContent = best;
       comboEl.textContent = `${combo}x`;
       energyEl.textContent = `${Math.max(0, Math.ceil(energy))}%`;
+      shieldEl.textContent = shield > 0 ? 'ON' : '0';
     }
 
     function collideCircle(a, b) {
@@ -342,7 +355,7 @@
       bestEl.textContent = best;
       overlay.style.display = 'grid';
       overlay.querySelector('h1').textContent = 'Rally Complete';
-      overlay.querySelector('p:not(.kicker)').innerHTML = `<b>${reason}</b><br>Score: ${Math.floor(score)} • Best: ${best}. Thread more gates to stack combos.`;
+      overlay.querySelector('p:not(.kicker)').innerHTML = `<b>${reason}</b><br>Score: ${Math.floor(score)} • Best: ${best}. Thread gates, bank batteries, and save shield orbs for risky combo runs.`;
       startBtn.textContent = 'Run It Back';
     }
 
@@ -362,9 +375,11 @@
 
       nextGate -= dt;
       nextBattery -= dt;
+      nextShield -= dt;
       nextHazard -= dt;
       if (nextGate <= 0) { spawnGate(); nextGate = rand(1.0, 1.45); }
       if (nextBattery <= 0) { spawnBattery(); nextBattery = rand(2.0, 3.0); }
+      if (nextShield <= 0 && shield === 0) { spawnShield(); nextShield = rand(7.5, 10.5); }
       if (nextHazard <= 0) { spawnHazard(); nextHazard = rand(1.55, 2.35); }
 
       const move = speed * dt;
@@ -390,6 +405,7 @@
       });
 
       batteries.forEach(b => { b.y += move * 1.05; b.pulse += dt * 7; });
+      shields.forEach(s => { s.y += move * 1.02; s.pulse += dt * 6; });
       hazards.forEach(h => { h.y += move * 1.12; h.wobble += dt * 4; });
 
       batteries = batteries.filter(b => {
@@ -403,15 +419,36 @@
         return b.y < H + 100;
       });
 
+      shields = shields.filter(s => {
+        if (collideCircle(drone, s)) {
+          shield = 1;
+          score += 45 * combo;
+          addParticles(s.x, s.y, '#67e8f9', 28);
+          showToast('Shield armed!');
+          return false;
+        }
+        return s.y < H + 100;
+      });
+
       for (const h of hazards) {
         const hit = collideCircle(drone, { x: h.x + Math.sin(h.wobble) * 12, y: h.y, r: h.r });
         if (hit) {
-          addParticles(drone.x, drone.y, '#ff5d73', 24);
-          endRun('Hazard strike');
+          if (shield > 0) {
+            shield = 0;
+            combo = 1;
+            energy = clamp(energy - 10, 0, 100);
+            h.y = H + 200;
+            addParticles(drone.x, drone.y, '#67e8f9', 38);
+            showToast('Shield saved you!');
+          } else {
+            addParticles(drone.x, drone.y, '#ff5d73', 24);
+            endRun('Hazard strike');
+          }
         }
       }
 
       gates = gates.filter(g => g.y < H + 170);
+      shields = shields.filter(s => s.y < H + 120);
       hazards = hazards.filter(h => h.y < H + 130);
       particles.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 320 * dt; p.life -= dt; });
       particles = particles.filter(p => p.life > 0);
@@ -483,6 +520,32 @@
       ctx.shadowBlur = 0;
     }
 
+    function drawShield(s) {
+      const pulse = 1 + Math.sin(s.pulse) * .1;
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.scale(pulse, pulse);
+      ctx.strokeStyle = '#67e8f9';
+      ctx.lineWidth = 8;
+      ctx.shadowColor = '#67e8f9';
+      ctx.shadowBlur = 28;
+      ctx.beginPath();
+      ctx.arc(0, 0, 26, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(103,232,249,.22)';
+      ctx.beginPath();
+      ctx.moveTo(0, -22);
+      ctx.lineTo(21, -7);
+      ctx.lineTo(13, 20);
+      ctx.lineTo(0, 28);
+      ctx.lineTo(-13, 20);
+      ctx.lineTo(-21, -7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.shadowBlur = 0;
+    }
+
     function drawHazard(h) {
       const x = h.x + Math.sin(h.wobble) * 12;
       ctx.save();
@@ -515,6 +578,15 @@
       ctx.save();
       ctx.translate(drone.x, drone.y);
       ctx.rotate(drone.vx * .00045);
+      if (shield > 0) {
+        ctx.strokeStyle = 'rgba(103,232,249,.82)';
+        ctx.lineWidth = 8;
+        ctx.shadowColor = '#67e8f9';
+        ctx.shadowBlur = 26;
+        ctx.beginPath();
+        ctx.arc(0, 0, 78 + Math.sin(cityOffset * .08) * 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.shadowColor = '#67e8f9';
       ctx.shadowBlur = 24;
       ctx.strokeStyle = 'rgba(255,255,255,.72)';
@@ -546,6 +618,7 @@
       drawCity();
       gates.forEach(drawGate);
       batteries.forEach(drawBattery);
+      shields.forEach(drawShield);
       hazards.forEach(drawHazard);
       particles.forEach(p => {
         ctx.globalAlpha = clamp(p.life * 2, 0, 1);
