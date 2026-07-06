@@ -44,8 +44,8 @@ button:focus-visible {
 
 .back-home {
   position: fixed;
-  top: 14px;
-  left: 14px;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
   z-index: 20;
   border-radius: 999px;
   padding: 0.65rem 0.9rem;
@@ -146,7 +146,7 @@ h1 {
 
 .touch-controls {
   position: absolute;
-  inset: auto 1rem 1rem 1rem;
+  inset: auto max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
   z-index: 6;
   display: none;
   grid-template-columns: 9rem 1fr;
@@ -213,10 +213,10 @@ h1 {
 }
 
 @media (max-width: 540px) {
-  body { align-items: start; padding-top: 2.7rem; }
+  body { align-items: start; padding-top: calc(2.7rem + env(safe-area-inset-top)); }
   #shell { width: 100vw; height: calc(100vh - 2.7rem); max-height: none; aspect-ratio: auto; }
-  .panel { padding: 1rem; max-height: calc(100vh - 5rem); overflow: auto; }
-  .touch-controls { grid-template-columns: 9rem 1fr; inset: auto .5rem calc(.5rem + env(safe-area-inset-bottom)) .5rem; gap: .45rem; }
+  .panel { padding: 1rem; max-height: calc(100vh - 5rem - env(safe-area-inset-top)); overflow: auto; }
+  .touch-controls { grid-template-columns: 9rem 1fr; inset: auto max(.5rem, env(safe-area-inset-right)) calc(.5rem + env(safe-area-inset-bottom)) max(.5rem, env(safe-area-inset-left)); gap: .45rem; }
   .touch-pad { grid-template-columns: repeat(3, 2.75rem); grid-template-rows: repeat(3, 2.75rem); gap: .28rem; }
   .touch-actions { grid-template-columns: repeat(2, minmax(4.35rem, 1fr)); max-width: 9.1rem; gap: .28rem; }
   .touch-actions button:first-child { grid-column: 1 / -1; }

@@ -2,8 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Stormfall</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Stormfall is a co-op DID Games survival prototype with touch controls, camp crafting, tornado spirits, and boss battles." />
+    <title>Stormfall | DID Games</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,15 +12,15 @@
     <main id="shell">
       <canvas id="game" width="1280" height="720" aria-label="Stormfall game canvas"></canvas>
       <section id="touchControls" class="touch-controls" aria-label="Touch controls">
-        <div class="touch-pad" aria-label="Move player one">
-          <span></span><button data-code="KeyW" type="button">▲</button><span></span>
-          <button data-code="KeyA" type="button">◀</button><span></span><button data-code="KeyD" type="button">▶</button>
-          <span></span><button data-code="KeyS" type="button">▼</button><span></span>
+        <div class="touch-pad" role="group" aria-label="Move player one">
+          <span></span><button data-code="KeyW" type="button" aria-label="Move up">▲</button><span></span>
+          <button data-code="KeyA" type="button" aria-label="Move left">◀</button><span></span><button data-code="KeyD" type="button" aria-label="Move right">▶</button>
+          <span></span><button data-code="KeyS" type="button" aria-label="Move down">▼</button><span></span>
         </div>
-        <div class="touch-actions">
-          <button data-code="KeyE" type="button">Gather</button>
-          <button data-code="KeyF" type="button">Attack</button>
-          <button data-code="KeyC" type="button">Craft</button>
+        <div class="touch-actions" role="group" aria-label="Player one actions">
+          <button data-code="KeyE" type="button" aria-label="Gather, build, or revive">Gather</button>
+          <button data-code="KeyF" type="button" aria-label="Attack with current weapon">Attack</button>
+          <button data-code="KeyC" type="button" aria-label="Craft at camp">Craft</button>
         </div>
       </section>
       <section id="menu" class="overlay">
@@ -38,6 +39,7 @@
           <div id="help" class="help">
             <strong>Player 1:</strong> WASD move, E gather/build/revive, F attack, C craft<br />
             <strong>Player 2:</strong> Arrow keys move, / gather/build/revive, . attack, , craft<br />
+            <strong>Touch:</strong> left pad moves Player 1; action buttons gather, attack, and craft.<br />
             <strong>Objective:</strong> gather wood/scrap/med herbs, build camp, craft storm spears,
             clear spirits, fight Robot Cat, then return to camp to travel onward.
           </div>
