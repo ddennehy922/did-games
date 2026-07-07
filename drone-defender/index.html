@@ -285,6 +285,7 @@
     let wave = 1;
     let base = 100;
     let highScore = Number(localStorage.getItem('droneDefenderHighScore') || 0);
+    let runStartHighScore = highScore;
     let audioContext = null;
     let soundEnabled = false;
     let toastTimer = 0;
@@ -319,6 +320,7 @@
       player.shield = 0; player.weapon = 'Laser'; player.weaponTimer = 0;
       shots.length = 0; missiles.length = 0; enemies.length = 0; packs.length = 0; sparks.length = 0;
       boss = null; bossWave = 0; score = 0; wave = 1; base = 100; spawnTimer = 0; packTimer = 5; shotTimer = 0;
+      runStartHighScore = highScore;
       running = true; overlay.style.display = 'none'; showToast(`${selectedPilot} launched!`, '#25f07a'); updateHud(); beep(660, .08, 'triangle');
     }
 
@@ -497,7 +499,7 @@
     function endGame() {
       running = false;
       overlay.style.display = 'grid';
-      const newRecord = score >= highScore && score > 0;
+      const newRecord = score > runStartHighScore && score > 0;
       overlay.querySelector('.start-card').innerHTML = `<h1>${newRecord ? 'New High Score!' : 'Mission Complete'}</h1><p>You scored <b>${score}</b>, reached wave <b>${wave}</b>, and flew as <b>${selectedPilot}</b>. High score: <b>${highScore}</b>.</p><button id="restartBtn">Fly Again</button><div class="hint">Tip: missiles hit bosses hard. Shields block collisions and base damage.</div>`;
       document.getElementById('restartBtn').addEventListener('click', reset);
       beep(180, .28, 'sawtooth', .035);
