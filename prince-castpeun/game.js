@@ -10,6 +10,7 @@ const messageEl = document.getElementById('message');
 const bossBar = document.getElementById('bossBar');
 const bossMeter = document.getElementById('bossMeter');
 const bossText = document.getElementById('bossText');
+const pauseBtn = document.getElementById('pauseBtn');
 
 const storage = {
   get(key, fallback = '0') {
@@ -34,6 +35,7 @@ const keys = { up:false, down:false, left:false, right:false, fire:false, dash:f
 const touchMove = { active: false, x: 0, y: 0 };
 let last = 0;
 let running = false;
+let paused = false;
 let score = 0;
 let high = Number(storage.get('crownQuestHigh'));
 let wave = 1;
@@ -60,6 +62,8 @@ function reset() {
   hero.x = 140; hero.y = H / 2; hero.vx = 0; hero.vy = 0; hero.facing = 0; hero.dash = 0;
   shots.length = enemies.length = gems.length = sparks.length = 0;
   running = true;
+  paused = false;
+  updatePauseButton();
   overlay.classList.add('hidden');
   showMessage('Collect gems and blast shadows. Boss waves arrive every 3 waves.');
   updateHud();
@@ -132,6 +136,8 @@ function damageBoss(amount) {
 }
 function endGame() {
   running = false;
+  paused = false;
+  updatePauseButton();
   const newRecord = score > high;
   if (newRecord) { high = score; storage.set('crownQuestHigh', String(high)); }
   overlay.classList.remove('hidden');
@@ -140,8 +146,30 @@ function endGame() {
   updateHud();
 }
 
+function updatePauseButton() {
+  if (!pauseBtn) return;
+  pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+  pauseBtn.setAttribute('aria-pressed', String(paused));
+}
+
+function togglePause() {
+  if (!running) return;
+  paused = !paused;
+  updatePauseButton();
+  if (paused) {
+    hero.vx = 0;
+    hero.vy = 0;
+    keys.fire = false;
+    keys.dash = false;
+    showMessage('Paused — tap Resume or press P/Esc.', 999);
+  } else {
+    showMessage('Quest resumed!', 1.1);
+  }
+}
+
 function update(dt) {
   if (!running) return;
+  if (paused) return;
   wave = 1 + Math.floor(score / 450);
   fireTimer = Math.max(0, fireTimer - dt);
   dashTimer = Math.max(0, dashTimer - dt);
@@ -241,7 +269,11 @@ function render() {
 function loop(t) { const dt = Math.min(.033, (t - last) / 1000 || 0); last = t; update(dt); requestAnimationFrame(loop); }
 
 const keyMap = { ArrowUp:'up', w:'up', W:'up', ArrowDown:'down', s:'down', S:'down', ArrowLeft:'left', a:'left', A:'left', ArrowRight:'right', d:'right', D:'right', ' ':'fire', Shift:'dash' };
-addEventListener('keydown', e => { const k = keyMap[e.key]; if (k) { e.preventDefault(); keys[k] = true; } });
+addEventListener('keydown', e => {
+  if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { e.preventDefault(); togglePause(); return; }
+  const k = keyMap[e.key];
+  if (k) { e.preventDefault(); keys[k] = true; }
+});
 addEventListener('keyup', e => { const k = keyMap[e.key]; if (k) { e.preventDefault(); keys[k] = false; } });
 function clearTouchMove() {
   touchMove.active = false;
@@ -300,6 +332,8 @@ document.querySelectorAll('.touch-actions button[data-key]').forEach(button => {
   button.addEventListener('lostpointercapture', release);
   button.addEventListener('pointerleave', release);
 });
+
+pauseBtn?.addEventListener('click', togglePause);
 
 addEventListener('blur', () => {
   clearTouchMove();
