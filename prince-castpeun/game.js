@@ -42,6 +42,7 @@ let wave = 1;
 let hearts = 3;
 let spawnTimer = 0;
 let gemTimer = 0;
+let heartTimer = 0;
 let fireTimer = 0;
 let dashTimer = 0;
 let invuln = 0;
@@ -58,7 +59,7 @@ const sparks = [];
 highEl.textContent = high;
 
 function reset() {
-  score = 0; wave = 1; hearts = 3; spawnTimer = 0; gemTimer = 1; fireTimer = 0; dashTimer = 0; invuln = 0; boss = null; bossWave = 0;
+  score = 0; wave = 1; hearts = 3; spawnTimer = 0; gemTimer = 1; heartTimer = 8; fireTimer = 0; dashTimer = 0; invuln = 0; boss = null; bossWave = 0;
   hero.x = 140; hero.y = H / 2; hero.vx = 0; hero.vy = 0; hero.facing = 0; hero.dash = 0;
   shots.length = enemies.length = gems.length = sparks.length = 0;
   running = true;
@@ -94,7 +95,8 @@ function spawnEnemy() {
   const type = wave > 4 && Math.random() < .36 ? 'brute' : 'shadow';
   enemies.push({ type, x: W + 40, y: rand(76, H - 80), r: type === 'brute' ? 26 : 18, hp: type === 'brute' ? 3 : 1, speed: rand(95, 150) + wave * 8, wobble: rand(0, Math.PI * 2) });
 }
-function spawnGem() { gems.push({ x: W + 28, y: rand(72, H - 70), r: 13, speed: rand(105, 155), pulse: rand(0, 10) }); }
+function spawnGem() { gems.push({ type: 'gem', x: W + 28, y: rand(72, H - 70), r: 13, speed: rand(105, 155), pulse: rand(0, 10) }); }
+function spawnHeart() { gems.push({ type: 'heart', x: W + 28, y: rand(88, H - 92), r: 15, speed: rand(95, 130), pulse: rand(0, 10) }); }
 function spawnBoss() {
   bossWave = wave;
   boss = { x: W + 120, y: H / 2, r: 54, hp: 18 + wave * 5, maxHp: 18 + wave * 5, speed: 70 + wave * 4, wobble: rand(0, 7), summon: 1.4 };
@@ -196,6 +198,11 @@ function update(dt) {
   if (spawnTimer <= 0 && !boss) { spawnEnemy(); spawnTimer = Math.max(.38, 1.05 - wave * .06); }
   gemTimer -= dt;
   if (gemTimer <= 0) { spawnGem(); gemTimer = rand(1.4, 2.4); }
+  heartTimer -= dt;
+  if (heartTimer <= 0) {
+    if (hearts < 5) spawnHeart();
+    heartTimer = rand(10, 16);
+  }
   if (!boss && wave >= 3 && wave % 3 === 0 && bossWave !== wave) spawnBoss();
 
   for (const s of shots) { s.x += s.vx * dt; s.life -= dt; }
@@ -230,7 +237,17 @@ function update(dt) {
   for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
     if (g.x < -30) gems.splice(i, 1);
-    else if (distance(hero, g) < hero.r + g.r) { score += 20; addSparks(g.x, g.y, '#1ed760', 18); gems.splice(i, 1); }
+    else if (distance(hero, g) < hero.r + g.r) {
+      if (g.type === 'heart') {
+        hearts = Math.min(5, hearts + 1);
+        addSparks(g.x, g.y, '#ff6bd6', 24);
+        showMessage('Royal heart repaired! Keep guarding the crown.', 1.6);
+      } else {
+        score += 20;
+        addSparks(g.x, g.y, '#1ed760', 18);
+      }
+      gems.splice(i, 1);
+    }
   }
   for (let i = shots.length - 1; i >= 0; i--) if (shots[i].x > W + 30 || shots[i].life <= 0) shots.splice(i, 1);
   for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
@@ -258,7 +275,23 @@ function render() {
   const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#183c6d'); bg.addColorStop(.48, '#28526b'); bg.addColorStop(.49, '#4c7a3b'); bg.addColorStop(1, '#203412'); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(255,255,255,.18)'; for (let i = 0; i < 24; i++) { ctx.beginPath(); ctx.ellipse((i * 113 - performance.now() / 42) % (W + 80), 58 + (i * 37) % 155, 38, 10, 0, 0, Math.PI * 2); ctx.fill(); }
   ctx.fillStyle = '#77583b'; for (let x = -40; x < W; x += 120) { ctx.fillRect(x, H - 78, 78, 78); ctx.fillRect(x + 18, H - 130 - (x % 3) * 12, 40, 60); }
-  for (const g of gems) { ctx.save(); ctx.translate(g.x, g.y + Math.sin(g.pulse) * 4); ctx.fillStyle = '#1ed760'; ctx.rotate(Math.PI / 4); ctx.fillRect(-10, -10, 20, 20); ctx.restore(); }
+  for (const g of gems) {
+    ctx.save();
+    ctx.translate(g.x, g.y + Math.sin(g.pulse) * 4);
+    if (g.type === 'heart') {
+      ctx.fillStyle = '#ff6bd6';
+      ctx.beginPath();
+      ctx.moveTo(0, 13);
+      ctx.bezierCurveTo(-22, -2, -12, -18, 0, -8);
+      ctx.bezierCurveTo(12, -18, 22, -2, 0, 13);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#1ed760';
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-10, -10, 20, 20);
+    }
+    ctx.restore();
+  }
   for (const s of shots) { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(s.x - 24, s.y - 2, 22, 4); }
   for (const e of enemies) drawEnemy(e);
   drawBoss();
