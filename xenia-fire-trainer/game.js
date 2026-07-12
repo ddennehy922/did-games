@@ -588,8 +588,14 @@ function loop(now) {
 }
 
 function updateGpsText() {
+  const label = gps ? 'On' : 'Off';
   ui.gpsText.textContent = `GPS: ${gps ? 'On' : 'Off'}`;
   ui.hudGps.textContent = `GPS ${gps ? 'On' : 'Off'}`;
+  document.querySelectorAll('#gpsBtn, #touchGps').forEach(btn => {
+    btn.textContent = btn.id === 'touchGps' ? `GPS ${label}` : `GPS: ${label}`;
+    btn.setAttribute('aria-pressed', String(gps));
+    btn.setAttribute('aria-label', `${gps ? 'Turn off' : 'Turn on'} GPS route guide`);
+  });
   if (activeCall) ui.dispatchText.textContent = `${VEHICLES[selectedVehicle].label} response to ${activeCall.address}. ${gps ? 'GPS guide is available.' : 'GPS is off: use street names and memory.'}`;
 }
 
@@ -646,8 +652,10 @@ function setupUI() {
 
 function updateViewButtons() {
   const label = VIEW_MODES[viewMode].label;
-  document.getElementById('zoomBtn').textContent = `View: ${label}`;
-  document.getElementById('touchZoom').textContent = `View: ${label}`;
+  document.querySelectorAll('#zoomBtn, #touchZoom').forEach(btn => {
+    btn.textContent = `View: ${label}`;
+    btn.setAttribute('aria-label', `Change map view, currently ${label}`);
+  });
 }
 
 function updateMinimapToggle(visible) {
