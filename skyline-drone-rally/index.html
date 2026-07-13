@@ -149,6 +149,14 @@
       box-shadow: rgba(57,255,136,.34) 0 14px 32px;
     }
 
+    .secondary-button {
+      margin-left: 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.12);
+      color: white;
+      box-shadow: none;
+    }
+
     .hint { margin-top: 12px; font-size: 13px; color: var(--muted); }
 
     .toast {
@@ -197,6 +205,7 @@
       .stat small { font-size: 9px; }
       .toast { top: 112px; width: calc(100vw - 34px); }
       .card { padding: 20px; }
+      .secondary-button { margin: 10px 0 0; }
     }
   </style>
 </head>
@@ -223,6 +232,7 @@
           <h1>Skyline Drone Rally</h1>
           <p>Fly a courier drone through neon city gates, collect batteries, dodge signal towers and blimps, then grab shield orbs to save a hot streak before your energy runs out.</p>
           <button id="startBtn" type="button">Start Rally</button>
+          <button class="secondary-button" id="soundBtn" type="button" aria-pressed="false">Sound: Off</button>
           <div class="hint">Phone: drag to steer. Desktop: WASD/arrow keys. Fly through gates for combos; blue shield orbs absorb one crash.</div>
         </div>
       </section>
@@ -239,6 +249,7 @@
     const shieldEl = document.getElementById('shield');
     const overlay = document.getElementById('overlay');
     const startBtn = document.getElementById('startBtn');
+    const soundBtn = document.getElementById('soundBtn');
     const toast = document.getElementById('toast');
 
     const BEST_KEY = 'did-skyline-drone-rally-high';
@@ -256,6 +267,8 @@
     let targetX = W / 2;
     let cityOffset = 0;
     let toastTimer = 0;
+    let audioContext = null;
+    let soundEnabled = false;
 
     const drone = { x: W / 2, y: H * .72, r: 34, vx: 0 };
     let gates = [];
@@ -274,6 +287,26 @@
     let nextHazard = 1.8;
 
     bestEl.textContent = best;
+
+    function beep(frequency = 440, duration = .06, type = 'sine', gain = .025) {
+      if (!soundEnabled) return;
+      audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const volume = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      volume.gain.value = gain;
+      oscillator.connect(volume);
+      volume.connect(audioContext.destination);
+      oscillator.start();
+      volume.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+      oscillator.stop(audioContext.currentTime + duration);
+    }
+
+    function playComboSound(level) {
+      beep(480 + level * 38, .045, 'triangle', .022);
+      if (level >= 4) setTimeout(() => beep(720 + level * 22, .055, 'square', .018), 55);
+    }
 
     function resetGame() {
       running = true;
@@ -298,6 +331,8 @@
       nextShield = 5.2;
       nextHazard = 1.55;
       showToast('Rally started!');
+      beep(520, .07, 'triangle');
+      setTimeout(() => beep(760, .08, 'triangle'), 90);
       updateHud();
     }
 
@@ -357,6 +392,7 @@
       overlay.querySelector('h1').textContent = 'Rally Complete';
       overlay.querySelector('p:not(.kicker)').innerHTML = `<b>${reason}</b><br>Score: ${Math.floor(score)} • Best: ${best}. Thread gates, bank batteries, and save shield orbs for risky combo runs.`;
       startBtn.textContent = 'Run It Back';
+      beep(150, .18, 'sawtooth', .032);
     }
 
     function update(dt) {
@@ -395,11 +431,13 @@
             energy = clamp(energy + 5, 0, 100);
             addParticles(drone.x, drone.y - 24, '#39ff88', 18);
             showToast(`Gate clear! Combo ${combo}x`);
+            playComboSound(combo);
           } else {
             combo = 1;
             energy -= 18;
             addParticles(drone.x, drone.y, '#ff5d73', 14);
             showToast('Missed gate!');
+            beep(180, .09, 'sawtooth', .026);
           }
         }
       });
@@ -414,6 +452,7 @@
           score += 20 * combo;
           addParticles(b.x, b.y, '#ffd166', 18);
           showToast('Battery +24');
+          beep(660, .055, 'triangle', .024);
           return false;
         }
         return b.y < H + 100;
@@ -425,6 +464,7 @@
           score += 45 * combo;
           addParticles(s.x, s.y, '#67e8f9', 28);
           showToast('Shield armed!');
+          beep(880, .075, 'triangle', .03);
           return false;
         }
         return s.y < H + 100;
@@ -440,6 +480,7 @@
             h.y = H + 200;
             addParticles(drone.x, drone.y, '#67e8f9', 38);
             showToast('Shield saved you!');
+            beep(240, .08, 'square', .028);
           } else {
             addParticles(drone.x, drone.y, '#ff5d73', 24);
             endRun('Hazard strike');
@@ -675,6 +716,17 @@
     }, { passive: false });
     window.addEventListener('keyup', event => keys.delete(event.code));
     startBtn.addEventListener('click', resetGame);
+    soundBtn.addEventListener('click', async () => {
+      soundEnabled = !soundEnabled;
+      soundBtn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+      soundBtn.setAttribute('aria-pressed', String(soundEnabled));
+      if (soundEnabled) {
+        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') await audioContext.resume();
+        beep(523, .07, 'square', .035);
+        setTimeout(() => beep(784, .08, 'triangle', .03), 90);
+      }
+    });
 
     requestAnimationFrame(loop);
   </script>
