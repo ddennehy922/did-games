@@ -689,6 +689,10 @@ window.addEventListener('keydown', e => {
   else keys.add(e.code);
 });
 window.addEventListener('keyup', e => keys.delete(e.code));
+window.addEventListener('blur', () => keys.clear());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) keys.clear();
+});
 
 document.querySelectorAll('[data-key]').forEach(btn => {
   const code = btn.dataset.key;
