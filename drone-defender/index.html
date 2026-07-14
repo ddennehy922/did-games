@@ -162,14 +162,16 @@
       border-radius: 16px;
       background: rgba(255,255,255,.12);
       color: white;
+      padding: 0;
       font-weight: 1000;
       display: grid;
       place-items: center;
       user-select: none;
       touch-action: none;
       backdrop-filter: blur(10px);
+      box-shadow: none;
     }
-    .touch:active { background: rgba(37,240,122,.34); }
+    .touch:active, .touch.is-pressed { background: rgba(37,240,122,.34); }
     .up { grid-column: 2; grid-row: 1; } .left { grid-column: 1; grid-row: 2; } .right { grid-column: 3; grid-row: 2; } .down { grid-column: 2; grid-row: 3; }
     .fire { width: 92px; height: 92px; border-radius: 999px; background: rgba(255,93,115,.22); pointer-events: auto; }
     @media (pointer: coarse), (max-width: 760px) {
@@ -238,13 +240,13 @@
         </div>
       </div>
       <div class="controls" aria-label="Touch controls">
-        <div class="pad">
-          <div class="touch up" data-key="up">▲</div>
-          <div class="touch left" data-key="left">◀</div>
-          <div class="touch right" data-key="right">▶</div>
-          <div class="touch down" data-key="down">▼</div>
+        <div class="pad" role="group" aria-label="Move drone">
+          <button class="touch up" data-key="up" type="button" aria-label="Fly up">▲</button>
+          <button class="touch left" data-key="left" type="button" aria-label="Fly left">◀</button>
+          <button class="touch right" data-key="right" type="button" aria-label="Fly right">▶</button>
+          <button class="touch down" data-key="down" type="button" aria-label="Fly down">▼</button>
         </div>
-        <div class="touch fire" data-key="fire">FIRE</div>
+        <button class="touch fire" data-key="fire" type="button" aria-label="Fire laser">FIRE</button>
       </div>
     </section>
   </div>
@@ -560,11 +562,31 @@
     addEventListener('keyup', e => { if (map[e.key]) { e.preventDefault(); keys[map[e.key]] = false; } });
     document.querySelectorAll('.touch').forEach(btn => {
       const key = btn.dataset.key;
-      const set = value => { keys[key] = value; };
-      btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture(e.pointerId); set(true); });
-      btn.addEventListener('pointerup', e => { e.preventDefault(); set(false); });
-      btn.addEventListener('pointercancel', () => set(false));
-      btn.addEventListener('pointerleave', () => set(false));
+      let activePointerId = null;
+      const set = value => {
+        keys[key] = value;
+        btn.classList.toggle('is-pressed', value);
+      };
+      const release = e => {
+        e?.preventDefault?.();
+        if (activePointerId !== null && e?.pointerId !== undefined && e.pointerId !== activePointerId) return;
+        activePointerId = null;
+        set(false);
+      };
+      btn.addEventListener('contextmenu', e => e.preventDefault());
+      btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+      btn.addEventListener('touchend', e => e.preventDefault(), { passive: false });
+      btn.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        if (activePointerId !== null && activePointerId !== e.pointerId) return;
+        activePointerId = e.pointerId;
+        btn.setPointerCapture?.(e.pointerId);
+        set(true);
+      });
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+      btn.addEventListener('lostpointercapture', release);
+      btn.addEventListener('pointerleave', release);
     });
     document.querySelectorAll('.pilot').forEach(btn => btn.addEventListener('click', () => { selectedPilot = btn.dataset.pilot; document.querySelectorAll('.pilot').forEach(p => p.classList.toggle('active', p === btn)); beep(600, .05, 'triangle'); }));
     soundBtn.addEventListener('click', async () => { soundEnabled = !soundEnabled; soundBtn.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off'; if (soundEnabled) { beep(520, .08, 'triangle'); setTimeout(() => beep(760, .08, 'triangle'), 90); } });
