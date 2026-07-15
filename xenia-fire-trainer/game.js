@@ -689,24 +689,38 @@ window.addEventListener('keydown', e => {
   else keys.add(e.code);
 });
 window.addEventListener('keyup', e => keys.delete(e.code));
-window.addEventListener('blur', () => keys.clear());
+
+function clearTouchDriving() {
+  keys.clear();
+  document.querySelectorAll('[data-key].is-pressed').forEach(btn => btn.classList.remove('is-pressed'));
+}
+
+window.addEventListener('blur', clearTouchDriving);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) keys.clear();
+  if (document.hidden) clearTouchDriving();
 });
 
 document.querySelectorAll('[data-key]').forEach(btn => {
   const code = btn.dataset.key;
+  let activePointerId = null;
   btn.setAttribute('unselectable', 'on');
   if (!btn.hasAttribute('aria-label')) btn.setAttribute('aria-label', `Touch control ${code}`);
   btn.addEventListener('contextmenu', e => e.preventDefault());
   const down = e => {
     e.preventDefault();
+    if (activePointerId !== null && activePointerId !== e.pointerId) return;
+    activePointerId = e.pointerId;
     keys.add(code);
+    btn.classList.add('is-pressed');
     btn.setPointerCapture?.(e.pointerId);
   };
   const up = e => {
     e.preventDefault();
+    const pointerId = e.pointerId ?? activePointerId;
+    if (activePointerId !== null && pointerId !== activePointerId) return;
+    activePointerId = null;
     keys.delete(code);
+    btn.classList.remove('is-pressed');
   };
   btn.addEventListener('pointerdown', down, { passive: false });
   btn.addEventListener('pointerup', up, { passive: false });
