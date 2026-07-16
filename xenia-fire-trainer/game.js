@@ -24,6 +24,7 @@ const VEHICLES = {
 let selectedVehicle = 'ambulance';
 let truck = { x: 0, y: 0, angle: 0, speed: 0, station: null };
 let activeCall = null;
+let lastCompletedCall = null;
 let runStart = null;
 let gps = true;
 let score = 0;
@@ -57,6 +58,7 @@ const ui = {
   hudGps: document.getElementById('hudGps'),
   gradeText: document.getElementById('gradeText'),
   stationButtons: document.getElementById('stationButtons'),
+  replayCallBtn: document.getElementById('replayCallBtn'),
   modeDescription: document.getElementById('modeDescription'),
   vehicleDescription: document.getElementById('vehicleDescription'),
   toast: document.getElementById('toast'),
@@ -233,11 +235,26 @@ function newDispatch() {
   if (!data.destinations.length) return;
   if (trainingMode === 'free') setMode('guided');
   activeCall = data.destinations[Math.floor(Math.random() * data.destinations.length)];
+  startDispatchRun();
+}
+
+function replayLastDispatch() {
+  if (!lastCompletedCall) {
+    showToast('Finish a dispatch first, then replay it for a faster route.');
+    return;
+  }
+  if (trainingMode === 'free') setMode('guided');
+  activeCall = lastCompletedCall;
+  startDispatchRun(true);
+}
+
+function startDispatchRun(isReplay = false) {
+  keys.clear();
   runStart = performance.now();
   ui.modePill.textContent = trainingMode === 'memory' ? 'Memory Run Active' : 'Dispatch Active';
   ui.dispatchTitle.textContent = activeCall.label;
-  ui.dispatchText.textContent = `${VEHICLES[selectedVehicle].label} response to ${activeCall.address}. ${gps ? 'GPS guide is available.' : 'GPS is off: use street names and memory.'}`;
-  showToast(`DISPATCH: ${VEHICLES[selectedVehicle].label} to ${activeCall.label} — ${activeCall.address}`);
+  ui.dispatchText.textContent = `${isReplay ? 'Replay route: ' : ''}${VEHICLES[selectedVehicle].label} response to ${activeCall.address}. ${gps ? 'GPS guide is available.' : 'GPS is off: use street names and memory.'}`;
+  showToast(`${isReplay ? 'REPLAY' : 'DISPATCH'}: ${VEHICLES[selectedVehicle].label} to ${activeCall.label} — ${activeCall.address}`);
 }
 
 function completeCall() {
@@ -258,8 +275,10 @@ function completeCall() {
   ui.bestText.textContent = `Best: ${fmt(bestRun)}`;
   ui.modePill.textContent = `Arrived +${earned}`;
   ui.dispatchTitle.textContent = 'Call complete';
-  ui.dispatchText.textContent = `Arrived at ${activeCall.address} in ${fmt(elapsed)}. Grade: ${grade}. Press New Dispatch for the next run.`;
+  ui.dispatchText.textContent = `Arrived at ${activeCall.address} in ${fmt(elapsed)}. Grade: ${grade}. Press Replay Last to practice this route again or New Dispatch for a fresh call.`;
   showToast(`Arrived. ${earned} points. Grade ${grade}.`);
+  lastCompletedCall = activeCall;
+  ui.replayCallBtn.disabled = false;
   activeCall = null;
   runStart = null;
 }
@@ -625,6 +644,7 @@ function setupUI() {
     ui.stationButtons.appendChild(b);
   });
   document.getElementById('newCallBtn').onclick = newDispatch;
+  ui.replayCallBtn.onclick = replayLastDispatch;
   document.getElementById('touchDispatch').onclick = newDispatch;
   document.getElementById('gpsBtn').onclick = toggleGps;
   document.getElementById('touchGps').onclick = toggleGps;
@@ -680,9 +700,10 @@ function toggleViewMode() {
 }
 
 window.addEventListener('keydown', e => {
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyN', 'KeyG', 'KeyR', 'KeyV'].includes(e.code)) e.preventDefault();
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyN', 'KeyL', 'KeyG', 'KeyR', 'KeyV'].includes(e.code)) e.preventDefault();
   if (e.repeat) return;
   if (e.code === 'KeyN') newDispatch();
+  else if (e.code === 'KeyL') replayLastDispatch();
   else if (e.code === 'KeyG') toggleGps();
   else if (e.code === 'KeyV') toggleViewMode();
   else if (e.code === 'KeyR') setStation(truck.station?.id);
