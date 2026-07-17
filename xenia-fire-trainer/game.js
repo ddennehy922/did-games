@@ -646,6 +646,7 @@ function setupUI() {
   document.getElementById('newCallBtn').onclick = newDispatch;
   ui.replayCallBtn.onclick = replayLastDispatch;
   document.getElementById('touchDispatch').onclick = newDispatch;
+  document.getElementById('touchReset').onclick = () => setStation(truck.station?.id);
   document.getElementById('gpsBtn').onclick = toggleGps;
   document.getElementById('touchGps').onclick = toggleGps;
   document.getElementById('zoomBtn').onclick = toggleViewMode;
