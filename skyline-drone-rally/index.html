@@ -233,7 +233,7 @@
           <p>Fly a courier drone through neon city gates, collect batteries, dodge signal towers and blimps, then grab shield orbs to save a hot streak before your energy runs out.</p>
           <button id="startBtn" type="button">Start Rally</button>
           <button class="secondary-button" id="soundBtn" type="button" aria-pressed="false">Sound: Off</button>
-          <div class="hint">Phone: drag to steer. Desktop: WASD/arrow keys. Fly through gates for combos; blue shield orbs absorb one crash.</div>
+          <div class="hint">Phone: drag anywhere to steer up, down, left, and right. Desktop: WASD/arrow keys. Fly through gates for combos; blue shield orbs absorb one crash.</div>
         </div>
       </section>
     </main>
@@ -265,6 +265,7 @@
     let gameOver = false;
     let pointerActive = false;
     let targetX = W / 2;
+    let targetY = H * .72;
     let cityOffset = 0;
     let toastTimer = 0;
     let audioContext = null;
@@ -316,6 +317,7 @@
       drone.y = H * .72;
       drone.vx = 0;
       targetX = drone.x;
+      targetY = drone.y;
       gates = [];
       batteries = [];
       shields = [];
@@ -401,9 +403,13 @@
 
       if (keys.has('ArrowLeft') || keys.has('KeyA')) drone.vx -= 1900 * dt;
       if (keys.has('ArrowRight') || keys.has('KeyD')) drone.vx += 1900 * dt;
+      if (keys.has('ArrowUp') || keys.has('KeyW')) targetY -= 720 * dt;
+      if (keys.has('ArrowDown') || keys.has('KeyS')) targetY += 720 * dt;
+      targetY = clamp(targetY, H * .46, H * .84);
       if (pointerActive) drone.vx += (targetX - drone.x) * 7 * dt;
       drone.vx *= Math.pow(.0008, dt);
       drone.x = clamp(drone.x + drone.vx * dt, 45, W - 45);
+      drone.y += (targetY - drone.y) * Math.min(1, 9 * dt);
 
       speed += dt * 8;
       energy -= dt * (4.8 + speed / 170);
@@ -692,16 +698,25 @@
 
     function pointerToCanvas(event) {
       const rect = canvas.getBoundingClientRect();
-      return ((event.clientX - rect.left) / rect.width) * W;
+      return {
+        x: ((event.clientX - rect.left) / rect.width) * W,
+        y: ((event.clientY - rect.top) / rect.height) * H
+      };
     }
 
     canvas.addEventListener('pointerdown', event => {
       pointerActive = true;
-      targetX = pointerToCanvas(event);
+      const point = pointerToCanvas(event);
+      targetX = point.x;
+      targetY = clamp(point.y, H * .46, H * .84);
       canvas.setPointerCapture(event.pointerId);
     });
     canvas.addEventListener('pointermove', event => {
-      if (pointerActive) targetX = pointerToCanvas(event);
+      if (pointerActive) {
+        const point = pointerToCanvas(event);
+        targetX = point.x;
+        targetY = clamp(point.y, H * .46, H * .84);
+      }
     });
     canvas.addEventListener('pointerup', event => {
       pointerActive = false;
