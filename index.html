@@ -813,7 +813,8 @@
           <h1 id="hero-title">DID Games <span class="gradient-text">Adventure Portal</span></h1>
           <p>Pick a game, jump in instantly, and help shape the next levels. Built for quick browser play, couch co-op experiments, and big kid-powered ideas — now with automatic Netlify updates from GitHub.</p>
           <div class="hero-actions">
-            <a class="pill primary" href="drone-defender/">Play Drone Defender</a>
+            <button class="pill primary" id="randomGame" type="button">Surprise Me 🎲</button>
+            <a class="pill" href="drone-defender/">Play Drone Defender</a>
             <a class="pill" href="wardrobe-winter/">Start Wardrobe Winter</a>
             <a class="pill" href="stormfall/">Play Stormfall</a>
             <a class="pill" href="skyline-drone-rally/">Fly Drone Rally</a>
@@ -962,6 +963,15 @@
 
   <script>
     const soundToggle = document.getElementById('soundToggle');
+    const randomGame = document.getElementById('randomGame');
+    const liveGames = [
+      'drone-defender/',
+      'wardrobe-winter/',
+      'stormfall/',
+      'skyline-drone-rally/',
+      'prince-castpeun/',
+      'xenia-fire-trainer/'
+    ];
     let audioContext = null;
     let soundEnabled = false;
 
@@ -990,6 +1000,12 @@
         beep(523, .07, 'square', .035);
         setTimeout(() => beep(784, .08, 'triangle', .03), 90);
       }
+    });
+
+    randomGame.addEventListener('click', () => {
+      const destination = liveGames[Math.floor(Math.random() * liveGames.length)];
+      beep(880, .06, 'square', .03);
+      window.location.href = destination;
     });
 
     document.querySelectorAll('a, button, .game-card').forEach((element) => {
