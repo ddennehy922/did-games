@@ -37,6 +37,8 @@ const VIEW_MODES = {
   city: { label: 'City', divisor: 1900, labelDistance: 1800 }
 };
 let bestRun = Number(localStorage.getItem('xeniaFireTrainerBestSeconds') || 0);
+const ROUTE_BESTS_KEY = 'xeniaFireTrainerRouteBestsV1';
+let routeBests = loadRouteBests();
 let toastTimer = null;
 let roadSegments = [];
 let lastRoadDistance = 0;
@@ -50,6 +52,8 @@ const ui = {
   timerText: document.getElementById('timerText'),
   gpsText: document.getElementById('gpsText'),
   bestText: document.getElementById('bestText'),
+  routeBestText: document.getElementById('routeBestText'),
+  medalText: document.getElementById('medalText'),
   scoreText: document.getElementById('scoreText'),
   runsText: document.getElementById('runsText'),
   speedText: document.getElementById('speedText'),
@@ -64,6 +68,46 @@ const ui = {
   toast: document.getElementById('toast'),
   overlay: document.getElementById('startOverlay')
 };
+
+function loadRouteBests() {
+  try {
+    return JSON.parse(localStorage.getItem(ROUTE_BESTS_KEY) || '{}') || {};
+  } catch (err) {
+    return {};
+  }
+}
+
+function saveRouteBests() {
+  try {
+    localStorage.setItem(ROUTE_BESTS_KEY, JSON.stringify(routeBests));
+  } catch (err) {
+    // Keep the session playable if private browsing or storage limits block saving.
+  }
+}
+
+function routeKey(call = activeCall, mode = trainingMode, vehicle = selectedVehicle) {
+  if (!call) return '';
+  return `${call.id || call.label}|${mode}|${vehicle}`;
+}
+
+function medalForRun(elapsed, usedGps) {
+  const target = usedGps ? 90 : 115;
+  if (elapsed <= target * 0.72) return '🥇 Gold';
+  if (elapsed <= target * 0.95) return '🥈 Silver';
+  if (elapsed <= target * 1.25) return '🥉 Bronze';
+  return 'Practice';
+}
+
+function updateRouteReplayText(call = activeCall) {
+  if (!call) {
+    ui.routeBestText.textContent = 'Route best: —';
+    ui.medalText.textContent = 'Medal: —';
+    return;
+  }
+  const best = routeBests[routeKey(call)];
+  ui.routeBestText.textContent = `Route best: ${best ? fmt(best.seconds) : '—'}`;
+  ui.medalText.textContent = `Medal: ${best?.medal || '—'}`;
+}
 
 function roadColor(cls) {
   return ({ motorway: '#7f95a3', trunk: '#ffb14a', primary: '#ffd166', secondary: '#c7d66d', tertiary: '#8bcf7a', residential: '#5a7894', service: '#36546e' }[cls] || '#47657e');
@@ -224,6 +268,7 @@ function setMode(mode) {
   ui.modeDescription.textContent = labels[mode][1];
   document.querySelectorAll('[data-mode]').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
   updateGpsText();
+  updateRouteReplayText(activeCall);
   if (mode === 'free') {
     ui.dispatchTitle.textContent = 'Free Drive';
     ui.dispatchText.textContent = 'Explore the map, learn street names, then switch to dispatch training when ready.';
@@ -254,11 +299,17 @@ function startDispatchRun(isReplay = false) {
   ui.modePill.textContent = trainingMode === 'memory' ? 'Memory Run Active' : 'Dispatch Active';
   ui.dispatchTitle.textContent = activeCall.label;
   ui.dispatchText.textContent = `${isReplay ? 'Replay route: ' : ''}${VEHICLES[selectedVehicle].label} response to ${activeCall.address}. ${gps ? 'GPS guide is available.' : 'GPS is off: use street names and memory.'}`;
+  updateRouteReplayText(activeCall);
   showToast(`${isReplay ? 'REPLAY' : 'DISPATCH'}: ${VEHICLES[selectedVehicle].label} to ${activeCall.label} — ${activeCall.address}`);
 }
 
 function completeCall() {
   const elapsed = (performance.now() - runStart) / 1000;
+  const finishedCall = activeCall;
+  const finishedKey = routeKey(finishedCall);
+  const medal = medalForRun(elapsed, gps);
+  const oldRouteBest = routeBests[finishedKey];
+  const routeRecord = !oldRouteBest || elapsed < oldRouteBest.seconds;
   const gpsPenalty = gps && trainingMode === 'memory' ? 150 : 0;
   const vehicle = VEHICLES[selectedVehicle];
   const earned = Math.max(100, Math.round(1300 - elapsed * 8 - gpsPenalty + vehicle.scoreBonus));
@@ -269,15 +320,21 @@ function completeCall() {
     bestRun = elapsed;
     localStorage.setItem('xeniaFireTrainerBestSeconds', String(bestRun));
   }
+  if (routeRecord) {
+    routeBests[finishedKey] = { seconds: elapsed, medal, label: finishedCall.label, mode: trainingMode, vehicle: selectedVehicle };
+    saveRouteBests();
+  }
   ui.scoreText.textContent = score;
   ui.runsText.textContent = runs;
   ui.gradeText.textContent = grade;
   ui.bestText.textContent = `Best: ${fmt(bestRun)}`;
+  ui.routeBestText.textContent = `Route best: ${fmt(routeBests[finishedKey].seconds)}`;
+  ui.medalText.textContent = `Medal: ${routeBests[finishedKey].medal}`;
   ui.modePill.textContent = `Arrived +${earned}`;
   ui.dispatchTitle.textContent = 'Call complete';
-  ui.dispatchText.textContent = `Arrived at ${activeCall.address} in ${fmt(elapsed)}. Grade: ${grade}. Press Replay Last to practice this route again or New Dispatch for a fresh call.`;
-  showToast(`Arrived. ${earned} points. Grade ${grade}.`);
-  lastCompletedCall = activeCall;
+  ui.dispatchText.textContent = `${routeRecord ? 'New route record! ' : ''}Arrived at ${finishedCall.address} in ${fmt(elapsed)} for ${medal}. Grade: ${grade}. Press Replay Last to chase a faster medal route or New Dispatch for a fresh call.`;
+  showToast(`${routeRecord ? 'Route record! ' : ''}${earned} points. ${medal}.`);
+  lastCompletedCall = finishedCall;
   ui.replayCallBtn.disabled = false;
   activeCall = null;
   runStart = null;
@@ -625,6 +682,7 @@ function setVehicle(type) {
   activeRoadSegment = null;
   ui.vehicleDescription.textContent = vehicle.description;
   document.querySelectorAll('[data-vehicle]').forEach(btn => btn.classList.toggle('active', btn.dataset.vehicle === selectedVehicle));
+  updateRouteReplayText(activeCall);
   showToast(`${vehicle.label} selected`);
   if (activeCall) updateGpsText();
 }
