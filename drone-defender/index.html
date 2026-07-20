@@ -269,6 +269,23 @@
 
     const W = canvas.width;
     const H = canvas.height;
+    const HIGH_KEY = 'droneDefenderHighScore';
+    const storage = {
+      get(key, fallback = '0') {
+        try {
+          return localStorage.getItem(key) || fallback;
+        } catch (error) {
+          return fallback;
+        }
+      },
+      set(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          // Private browsing or blocked storage should not stop the game loop.
+        }
+      }
+    };
     const keys = { up: false, down: false, left: false, right: false, fire: false };
     const pilots = {
       Ace: { speed: 365, cooldown: .17, color: '#66e8ff' },
@@ -286,7 +303,7 @@
     let score = 0;
     let wave = 1;
     let base = 100;
-    let highScore = Number(localStorage.getItem('droneDefenderHighScore') || 0);
+    let highScore = Number(storage.get(HIGH_KEY));
     let runStartHighScore = highScore;
     let audioContext = null;
     let soundEnabled = false;
@@ -493,7 +510,7 @@
       for (let i = shots.length - 1; i >= 0; i--) if (shots[i].x > W + 30) shots.splice(i, 1);
       for (let i = missiles.length - 1; i >= 0; i--) if (missiles[i].x > W + 40) missiles.splice(i, 1);
       for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].life <= 0) sparks.splice(i, 1);
-      if (score > highScore) { highScore = score; localStorage.setItem('droneDefenderHighScore', String(highScore)); }
+      if (score > highScore) { highScore = score; storage.set(HIGH_KEY, String(highScore)); }
       if (base <= 0) endGame();
       updateHud();
     }
